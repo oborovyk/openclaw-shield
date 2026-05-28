@@ -20,8 +20,8 @@
 
 set -eo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GUARDRAILS_DIR="${REPO_ROOT}/core/guardrails"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+GUARDRAILS_DIR="${SCRIPT_DIR}/guardrails"
 
 GUARDRAIL_NAMES="secret injection read-injection bash-output destruction"
 
@@ -55,7 +55,7 @@ cmd_scan() {
 cmd_list() {
   printf "%-16s  %s\n" "NAME" "SCRIPT"
   for name in ${GUARDRAIL_NAMES}; do
-    printf "%-16s  %s\n" "$name" "core/guardrails/$(guardrail_script "$name")"
+    printf "%-16s  %s\n" "$name" "extras/claude-code/guardrails/$(guardrail_script "$name")"
   done
 }
 
@@ -64,12 +64,12 @@ cmd_help() {
 }
 
 cmd_install() {
-  chmod +x "${REPO_ROOT}/adapters/claude-code/install.sh"
-  exec "${REPO_ROOT}/adapters/claude-code/install.sh" install "${REPO_ROOT}"
+  chmod +x "${SCRIPT_DIR}/install.sh"
+  exec "${SCRIPT_DIR}/install.sh" install "${SCRIPT_DIR}"
 }
 
 cmd_uninstall() {
-  exec "${REPO_ROOT}/adapters/claude-code/install.sh" uninstall
+  exec "${SCRIPT_DIR}/install.sh" uninstall
 }
 
 main() {

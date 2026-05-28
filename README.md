@@ -1,56 +1,83 @@
 # openclaw-os
 
-Provider-neutral security guardrails and reusable skills for coding-agent CLIs (Claude Code, ChatGPT/Codex CLI, Cursor, …).
+Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw) — secret scan, prompt-injection scan, destruction guard, read-injection scan, bash-output secret scan — wired into OpenClaw's `inbound_claim`, `before_tool_call`, and `after_tool_call` hooks.
 
-Inspired by [silverblock-claude-os](https://github.com/silverblock/silverblock-claude-os), but redesigned around two abstractions that don't depend on any single provider:
+This repo *is* the `@openclaw-os/security` OpenClaw plugin. Drop it into the `extensions/` folder of an OpenClaw checkout and every channel (Telegram, WhatsApp, Slack, Discord, …) starts getting scanned automatically.
 
-- **Guardrails** — executable security checks (secret scan, prompt-injection scan, destructive-command scan, …) with a stable CLI + JSON contract. Wire them into Claude Code hooks, Codex CLI hooks, pre-commit, or CI — same binary, every time.
-- **Skills** — provider-neutral instruction bundles (`skill.yaml` + `prompt.md`). Adapters lower them to each provider's native format (Claude Code `SKILL.md`, Codex CLI `AGENTS.md` snippets, …).
+> Also ships a Claude Code install path under [`extras/claude-code/`](extras/claude-code/) — the same five scanners, ported to Python, wired into `~/.claude/settings.json`. Independent of the OpenClaw plugin; for users who want the protections in their local Claude Code session.
 
-> **Status: usable for Claude Code and OpenClaw.**
-> - **Claude Code**: all five guardrails ported, installed via `./openclaw.sh install` into `~/.claude/settings.json`.
-> - **OpenClaw**: TypeScript adapter at [`adapters/openclaw/`](adapters/openclaw/) — a real OpenClaw plugin (`@openclaw-os/security`) that registers into `inbound_claim`, `before_tool_call`, and `after_tool_call` hooks. Protects every channel (Telegram, WhatsApp, Slack, …) automatically. Install via workspace symlink — see [`adapters/openclaw/README.md`](adapters/openclaw/README.md).
-> - Codex CLI / Cursor / other adapters still TODO.
-> See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
+## What it protects
 
-## Try it
+| OpenClaw hook | Guardrail | Behavior |
+| --- | --- | --- |
+| `inbound_claim` | Secret scan on inbound channel text | Warn + redact before LLM sees it |
+| `inbound_claim` | Prompt-injection scan on inbound text | Warn (opt-in hard-block via `blockOnInjection: true`) |
+| `before_tool_call` | Destruction rules vs. shell-like tool commands | **Block** with `{ block: true, blockReason }` |
+| `before_tool_call` | Secret scan on every string param | **Block** (refuses to send credentials to a tool) |
+| `after_tool_call` | Secret scan on shell-tool output | Warn (masked) so the model is told not to echo |
+| `after_tool_call` | Injection scan on file/url-read tool output | Warn (indirect-injection alert) |
+
+Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. message that openclaw claims runs through `inbound_claim`.
+
+## Install (OpenClaw plugin)
+
+From an OpenClaw checkout:
 
 ```bash
-cd ~/development/openclaw-os
-./openclaw.sh install        # copies guardrails to ~/.openclaw/, wires hooks into ~/.claude/settings.json
-./openclaw.sh list           # show installed guardrails
-./openclaw.sh scan secret --staged
-./openclaw.sh scan injection --dir .
-./openclaw.sh uninstall      # reverse — leaves any non-openclaw hooks untouched
+cd /path/to/openclaw
+ln -s /Users/oborovyk/development/clients/openclaw-os extensions/openclaw-os
+grep -q "extensions/\*" pnpm-workspace.yaml || echo '  - "extensions/*"' >> pnpm-workspace.yaml
+pnpm install
+pnpm dev   # or however you start the gateway
 ```
 
-After `install`, restart Claude Code so it picks up the new hooks. From then on:
-- `git commit ...` issued by Claude triggers secret-scan + prompt-injection-scan; non-zero exit blocks the commit.
-- Every `Bash` tool call runs through destruction-scan; `rm -rf /` etc. blocked with exit 2.
-- Every `Read` runs through read-injection-scanner; warns on injection patterns in agent-readable files.
-- Every `Bash` output is scanned for leaked secrets and the model is warned not to repeat them.
+Then in your openclaw config:
 
-The installer is idempotent and preserves any pre-existing entries in `~/.claude/settings.json`.
+```yaml
+plugins:
+  entries:
+    openclaw-os:
+      inboundClaim:    { scanSecrets: true, scanInjection: true, redactSecrets: true, blockOnInjection: false }
+      beforeToolCall:  { destruction: true, scanParamSecrets: true }
+      afterToolCall:   { scanReadResultsForInjection: true, scanShellOutputForSecrets: true }
+```
+
+Look for `[openclaw-os] …` lines in stderr to see findings. Full plugin docs: [docs/OPENCLAW-PLUGIN.md](docs/OPENCLAW-PLUGIN.md).
 
 ## Layout
 
 ```
 openclaw-os/
-├── openclaw.sh            # CLI entrypoint (install/doctor/sync/scan)            [TODO]
-├── core/                  # PROVIDER-NEUTRAL — single source of truth
-│   ├── guardrails/        # Python executables; CLI + JSON contract              [TODO]
-│   ├── skills/            # <name>/skill.yaml + prompt.md                        [TODO]
-│   └── instructions/      # global.md → rendered as CLAUDE.md / AGENTS.md / …    [TODO]
-├── adapters/
-│   ├── claude-code/       # marketplace + plugin shell exists; renderer [TODO]
-│   └── codex-cli/         # empty                                                [TODO]
+├── openclaw.plugin.json        ← OpenClaw plugin manifest
+├── package.json                ← @openclaw-os/security (workspace package)
+├── tsconfig.json
+├── index.ts                    ← definePluginEntry + registerHook calls
+├── src/
+│   ├── config.ts
+│   ├── patterns/               ← TS pattern packs (regex source of truth for the plugin)
+│   └── hooks/                  ← inbound-claim, before-tool-call, after-tool-call
+├── extras/
+│   └── claude-code/            ← Optional: install the same guardrails into Claude Code
+│       ├── openclaw.sh         ← CLI: install / uninstall / scan / list
+│       ├── install.sh          ← writes to ~/.claude/settings.json
+│       └── guardrails/         ← 5 Python scanners (Claude-Code-shaped: stdin JSON + flags)
 └── docs/
-    └── ARCHITECTURE.md
+    ├── ARCHITECTURE.md
+    └── OPENCLAW-PLUGIN.md
 ```
 
-## Why this shape
+## Claude Code install (optional)
 
-Silverblock's harness is built entirely on Claude Code primitives — `SKILL.md`, `commands/`, `hooks.json`, `claude plugin install`. None of those exist in ChatGPT/Codex CLI, Cursor, Continue, etc. To support more than one provider we need a layer above those primitives.
+```bash
+cd ~/development/clients/openclaw-os
+./extras/claude-code/openclaw.sh install     # copies guardrails to ~/.openclaw/, merges hooks into ~/.claude/settings.json
+./extras/claude-code/openclaw.sh list
+./extras/claude-code/openclaw.sh scan secret --staged
+./extras/claude-code/openclaw.sh uninstall
+```
 
-Openclaw treats the **core** (guardrails + skills + instructions) as the source of truth and the **adapters** as compilers that target each provider's native format. Add a new provider by writing one adapter; every existing guardrail and skill comes along for free.
+Restart Claude Code after install. Idempotent; preserves any pre-existing entries in `~/.claude/settings.json`.
 
+## Known gap
+
+The TS pattern packs (`src/patterns/*.ts`) and the Python pattern packs (`extras/claude-code/guardrails/*.py`) are independent ports of the same patterns. Editing one does not update the other. Future work: move pattern lists to language-neutral JSON and have both sides load them.

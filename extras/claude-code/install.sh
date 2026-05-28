@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# adapters/claude-code/install.sh — render+install openclaw guardrails into Claude Code.
+# extras/claude-code/install.sh — install openclaw-os guardrails into Claude Code.
 #
 # What this does:
-#   1. Copies core/guardrails/*.py to ~/.openclaw/guardrails/
+#   1. Copies extras/claude-code/guardrails/*.py to ~/.openclaw/guardrails/
 #   2. Merges PreToolUse/PostToolUse hook entries into ~/.claude/settings.json
 #   3. Idempotent — safe to re-run on every git pull.
 #
@@ -10,8 +10,8 @@
 # so the installer can be exercised against a temp directory in tests.
 #
 # Usage:
-#   adapters/claude-code/install.sh install     [REPO_ROOT]
-#   adapters/claude-code/install.sh uninstall
+#   extras/claude-code/install.sh install     [CLAUDE_CODE_DIR]
+#   extras/claude-code/install.sh uninstall
 
 set -eo pipefail
 
@@ -35,8 +35,8 @@ EOF
 }
 
 copy_guardrails() {
-  local repo_root="$1"
-  local src="${repo_root}/core/guardrails"
+  local base_dir="$1"
+  local src="${base_dir}/guardrails"
   mkdir -p "${OPENCLAW_HOME}/guardrails"
   cp "${src}"/*.py "${OPENCLAW_HOME}/guardrails/"
   chmod +x "${OPENCLAW_HOME}/guardrails/"*.py
@@ -157,8 +157,8 @@ remove_guardrails() {
 
 case "${1:-}" in
   install)
-    repo_root="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
-    copy_guardrails "$repo_root"
+    base_dir="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+    copy_guardrails "$base_dir"
     merge_hooks
     echo
     echo "openclaw-os installed for Claude Code."
