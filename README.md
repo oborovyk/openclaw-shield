@@ -81,6 +81,15 @@ Add `--dry-run` to see what either disable or uninstall will do without applying
 
 > Nix users: `OPENCLAW_NIX_MODE=1` makes `plugins install/update/uninstall/enable/disable` no-ops. Install via the [`nix-openclaw`](https://github.com/openclaw/nix-openclaw) source instead.
 
+## Bundled skill: `secret-handoff`
+
+[`skills/secret-handoff/SKILL.md`](skills/secret-handoff/SKILL.md) is a manager-agnostic skill that auto-activates when the conversation touches credentials. It codifies the canonical secret-manager workflow for both directions:
+
+- **Storing** a credential: store in the manager (per the table below), write a reference (or pull-at-run-time config) to the env file, run the app via the manager's `run`-style wrapper.
+- **Using** a credential: prefer the wrapper (`op run`, `bws run`, `doppler run`, `infisical run`) over inline resolution; never paste the literal value into chat.
+
+The skill covers **the same 8 managers** the secret cache below resolves: 1Password, Bitwarden Secrets Manager, Doppler, Infisical, HashiCorp Vault, pass, macOS Keychain, AWS Secrets Manager. It includes an install-command table (per OS, with docs URLs) and a quick-reference store + read table so the model uses the exact canonical command rather than improvising.
+
 ## Secret cache helper
 
 `src/secret-cache.ts` exports `secret(ref, { envFallback })` for any plugin code that needs to resolve a secret-manager reference without re-prompting (Touch ID / keychain unlock / re-auth) on every call. AES-256-CBC encrypted at-rest under `$TMPDIR/.openclaw-shield-cache.<uid>/`, 3h default TTL, openssl-compatible file format.
@@ -152,10 +161,13 @@ openclaw-shield/
 ├── install.sh                      ← contributor convenience for source builds
 ├── src/
 │   ├── config.ts
-│   ├── secret-cache.ts             ← AES-encrypted op:// resolver
+│   ├── secret-cache.ts             ← AES-encrypted manager-CLI dispatch
+│   ├── resolvers.ts                ← 8 per-vendor resolvers (op / bws / doppler / …)
 │   ├── patterns/                   ← regex packs
 │   ├── hooks/                      ← inbound-claim, before-dispatch, before-prompt-build, before-tool-call, after-tool-call
-│   └── **/*.test.ts                ← 10 test files, 64 tests
+│   └── **/*.test.ts                ← 12 test files, 101 tests
+├── skills/
+│   └── secret-handoff/SKILL.md     ← multi-manager secret-store workflow
 ├── docs/
 │   └── OPENCLAW-PLUGIN.md          ← plugin reference + contributor install
 ├── CLAUDE.md                       ← agent-facing repo notes
