@@ -1,5 +1,13 @@
 # openclaw-shield
 
+[![CI](https://github.com/oborovyk/openclaw-shield/actions/workflows/ci.yml/badge.svg)](https://github.com/oborovyk/openclaw-shield/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![OpenClaw plugin](https://img.shields.io/badge/OpenClaw-plugin-blueviolet)](https://github.com/openclaw/openclaw)
+[![Node.js](https://img.shields.io/badge/Node.js-22%2B-brightgreen)](https://nodejs.org/)
+[![Tests](https://img.shields.io/badge/tests-71-brightgreen)](src)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
+[![Security policy](https://img.shields.io/badge/security-policy-informational)](SECURITY.md)
+
 Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw) — secret scan, prompt-injection scan, destruction guard, read-injection scan, bash-output secret scan, AES-encrypted secret cache — wired into OpenClaw's `inbound_claim`, `before_dispatch`, `before_tool_call`, and `after_tool_call` hooks.
 
 This repo *is* the `@openclaw-shield/security` OpenClaw plugin. Install it with one OpenClaw CLI command — works on Docker, nix, npm-global, source builds, anywhere `openclaw` runs.
