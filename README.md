@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw plugin](https://img.shields.io/badge/OpenClaw-plugin-blueviolet)](https://github.com/openclaw/openclaw)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-brightgreen)](https://nodejs.org/)
-[![Tests](https://img.shields.io/badge/tests-71-brightgreen)](src)
+[![Tests](https://img.shields.io/badge/tests-101-brightgreen)](src)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 [![Security policy](https://img.shields.io/badge/security-policy-informational)](SECURITY.md)
 
@@ -83,14 +83,28 @@ Add `--dry-run` to see what either disable or uninstall will do without applying
 
 ## Secret cache helper
 
-`src/secret-cache.ts` exports `secret(opPath, { envFallback })` for any plugin code that needs to resolve a 1Password secret without Touch-ID-prompting the user on every call. AES-256-CBC encrypted at-rest under `$TMPDIR/.openclaw-shield-cache.<uid>/`, 3h default TTL, openssl-compatible file format.
+`src/secret-cache.ts` exports `secret(ref, { envFallback })` for any plugin code that needs to resolve a secret-manager reference without re-prompting (Touch ID / keychain unlock / re-auth) on every call. AES-256-CBC encrypted at-rest under `$TMPDIR/.openclaw-shield-cache.<uid>/`, 3h default TTL, openssl-compatible file format.
+
+**Supported reference shapes** (dispatch by URL prefix; see [src/resolvers.ts](src/resolvers.ts) to add a new manager):
+
+| Prefix | Manager | Underlying CLI |
+| --- | --- | --- |
+| `op://<vault>/<item>/<field>` | 1Password | `op read` |
+| `bws://<secret-id>` | Bitwarden Secrets Manager | `bws secret get` |
+| `doppler://<project>/<config>/<key>` | Doppler | `doppler secrets get` |
+| `infisical://<env>/<key>` | Infisical | `infisical secrets get` |
+| `vault://<path>/<field>` | HashiCorp Vault | `vault kv get -field=` |
+| `pass://<name>` | Unix password store | `pass show` |
+| `keychain://<account>@<service>` | macOS Keychain | `security find-generic-password` |
+| `aws-sm://<name>` | AWS Secrets Manager | `aws secretsmanager get-secret-value` |
 
 ```ts
 import { secret } from "@openclaw-shield/security/src/secret-cache.js";
 
-const token = await secret("op://<vault>/<item>/<field>", {
-  envFallback: "MY_TOKEN_ENV_VAR",
-});
+// Works for any of the 8 managers — dispatch is by URL prefix.
+const token = await secret("op://<vault>/<item>/credential", { envFallback: "MY_TOKEN_ENV_VAR" });
+const doppler = await secret("doppler://my-project/dev/STRIPE_KEY");
+const vault   = await secret("vault://secret/path/api_key");
 ```
 
 **Env knobs**:

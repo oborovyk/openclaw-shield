@@ -28,8 +28,6 @@
 //   import { secret, clearSecretCache } from "./secret-cache.js";
 //   const token = await secret("op://<vault>/<item>/<field>", { envFallback: "FOO_TOKEN" });
 
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
 import {
   createCipheriv,
   createDecipheriv,
@@ -51,8 +49,6 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getKeychainPassphrase } from "./keychain.js";
-
-const execFileP = promisify(execFile);
 
 // OpenSSL-compatible AES-256-CBC + PBKDF2-SHA256, salt prefix "Salted__"
 // (the "openssl enc" file format). Lets the cache file be inspectable with
@@ -160,19 +156,7 @@ function pruneStale(dir: string, ttl: number): void {
   }
 }
 
-async function fetchFromOp(opPath: string): Promise<string | null> {
-  // Test-only escape hatch: when set, skip invoking `op read` entirely so the
-  // caller falls straight through to the env-fallback path. Tests use this to
-  // avoid hanging on a Touch-ID-prompt-bearing local 1Password CLI.
-  if (process.env.OPENCLAW_SHIELD_SKIP_OP === "1") return null;
-  try {
-    const { stdout } = await execFileP("op", ["read", opPath], { timeout: 30_000 });
-    const tok = stdout.replace(/\n$/, "");
-    return tok || null;
-  } catch {
-    return null;
-  }
-}
+import { resolve as resolveSecret } from "./resolvers.js";
 
 export type SecretOptions = {
   /** Env-var name to consult if `op read` fails or `op` isn't installed. */
@@ -221,8 +205,8 @@ export async function secret(opPath: string, opts: SecretOptions = {}): Promise<
     }
   }
 
-  // Cache miss: op → env fallback.
-  let tok = await fetchFromOp(opPath);
+  // Cache miss: manager-CLI dispatch → env fallback.
+  let tok = await resolveSecret(opPath);
   if (!tok && opts.envFallback) {
     tok = process.env[opts.envFallback] ?? null;
     if (tok === "") tok = null;
