@@ -4,7 +4,7 @@ Agent-facing notes for working in this repo. For end-user / install docs, see [R
 
 ## What this repo is
 
-`@openclaw-os/security` — a single OpenClaw plugin that registers four runtime hooks (`inbound_claim`, `before_dispatch`, `before_tool_call`, `after_tool_call`) and applies regex-based security guardrails against the events that flow through them.
+`@openclaw-os/security` — a single OpenClaw plugin that registers five runtime hooks (`inbound_claim`, `before_dispatch`, `before_prompt_build`, `before_tool_call`, `after_tool_call`) and applies regex-based security guardrails against the events that flow through them.
 
 Designed to be symlinked into `openclaw/extensions/openclaw-os/` and auto-loaded by openclaw's pnpm-workspace + plugin loader. Works standalone for development and tests; the openclaw monorepo provides the `openclaw` and `@openclaw/plugin-sdk` peer dependencies at runtime via workspace resolution.
 
@@ -38,9 +38,10 @@ src/patterns/
 src/hooks/
   inbound-claim.ts            warn / opt-in block
   before-dispatch.ts          rewrites body with redacted secrets (the only mutating hook)
+  before-prompt-build.ts      detect secrets in late-binding context; append refusal guidance (append-only result)
   before-tool-call.ts         block destructive cmds + secrets-in-params
   after-tool-call.ts          warn on shell-output secrets, read-output injection
-src/**/*.test.ts              9 files, 59 tests; vitest
+src/**/*.test.ts              10 files, 64 tests; vitest
 ```
 
 ## Commands

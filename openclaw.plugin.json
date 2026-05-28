@@ -1,7 +1,7 @@
 {
   "id": "openclaw-os",
   "name": "openclaw-os Security",
-  "description": "Runtime security guardrails for OpenClaw: secret-scan, prompt-injection-scan, destruction-scan, read-injection-scan, bash-output-scan — wired into inbound_claim, before_tool_call, and after_tool_call hooks.",
+  "description": "Runtime security guardrails for OpenClaw: secret-scan, prompt-injection-scan, destruction-scan, read-injection-scan, bash-output-scan — wired into inbound_claim, before_dispatch, before_prompt_build, before_tool_call, and after_tool_call hooks.",
   "kind": "security",
   "activation": {
     "onStartup": true
@@ -19,6 +19,13 @@
           "scanInjection": { "type": "boolean" },
           "redactSecrets": { "type": "boolean" },
           "blockOnInjection": { "type": "boolean" }
+        }
+      },
+      "beforePromptBuild": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "scanAssembledPrompt": { "type": "boolean" }
         }
       },
       "beforeToolCall": {

@@ -8,6 +8,9 @@ export type GuardrailsConfig = {
     redactSecrets: boolean;
     blockOnInjection: boolean;
   };
+  beforePromptBuild: {
+    scanAssembledPrompt: boolean;
+  };
   beforeToolCall: {
     destruction: boolean;
     scanParamSecrets: boolean;
@@ -26,6 +29,9 @@ export const DEFAULT_CONFIG: GuardrailsConfig = {
     redactSecrets: true,
     blockOnInjection: false, // false-positive risk on chat → warn-only by default
   },
+  beforePromptBuild: {
+    scanAssembledPrompt: true,
+  },
   beforeToolCall: {
     destruction: true,
     scanParamSecrets: true,
@@ -39,6 +45,7 @@ export const DEFAULT_CONFIG: GuardrailsConfig = {
 
 type RawConfig = {
   inboundClaim?: Partial<GuardrailsConfig["inboundClaim"]>;
+  beforePromptBuild?: Partial<GuardrailsConfig["beforePromptBuild"]>;
   beforeToolCall?: Partial<GuardrailsConfig["beforeToolCall"]>;
   afterToolCall?: Partial<GuardrailsConfig["afterToolCall"]>;
   verboseLogging?: boolean;
@@ -49,6 +56,7 @@ export function resolveConfig(raw: unknown): GuardrailsConfig {
   const r = raw as RawConfig;
   return {
     inboundClaim: { ...DEFAULT_CONFIG.inboundClaim, ...r.inboundClaim },
+    beforePromptBuild: { ...DEFAULT_CONFIG.beforePromptBuild, ...r.beforePromptBuild },
     beforeToolCall: { ...DEFAULT_CONFIG.beforeToolCall, ...r.beforeToolCall },
     afterToolCall: { ...DEFAULT_CONFIG.afterToolCall, ...r.afterToolCall },
     verboseLogging:

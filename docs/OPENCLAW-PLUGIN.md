@@ -9,10 +9,17 @@ Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw)
 | `inbound_claim` | Secret scan on inbound message text (every channel) | Log finding |
 | `inbound_claim` | Prompt-injection scan on inbound text | Log + opt-in hard-block (`blockOnInjection: true`) |
 | `before_dispatch` | Secret redaction in dispatched body | Rewrites `text` so the agent sees `[openclaw-os redacted: AWS Access Key → AKIA…YQRE]` instead of the token |
+| `before_prompt_build` | Late-binding secret scan on the assembled prompt (catches secrets pulled in via memory/skills/prior turn) | Append-only: logs the finding + appends a refusal-and-rotate instruction to the system prompt. Cannot rewrite the prompt — see "Limitation" below. |
 | `before_tool_call` | Destruction-rule scan against canonical shell tools (`bash`, `exec`) | **Block** with `{ block: true, blockReason }` |
 | `before_tool_call` | Secret scan on every string param value | **Block** (refuses to send credentials to a tool) |
 | `after_tool_call` | Secret scan on shell-tool output | Log masked warning so the model is told not to echo |
 | `after_tool_call` | Prompt-injection scan on file/url-read tool results | Log warning (indirect-injection alert) |
+
+### Limitation of before_prompt_build
+
+`PluginHookBeforePromptBuildResult` (defined at `openclaw/src/plugins/hook-before-agent-start.types.ts:28`) only exposes append-only fields (`systemPrompt`, `prepend|appendContext`, `prepend|appendSystemContext`). It cannot mutate `event.prompt` or `event.messages` in place — so we **cannot silently redact** a credential out of memory-injected context at this layer.
+
+What we do instead: detect, log, and append a refusal-and-rotate instruction to the system prompt so the model is told not to echo the secret. Defence-in-depth over silent redaction at this layer. The real fix is rotating the credential — the appended guidance asks the model to recommend that.
 
 ### Why inbound_claim and before_dispatch are split
 
@@ -57,6 +64,8 @@ plugins:
         scanInjection: true
         redactSecrets: true       # applied in before_dispatch
         blockOnInjection: false   # set true to hard-reject inbound prompt-injection in inbound_claim
+      beforePromptBuild:
+        scanAssembledPrompt: true # catch secrets that snuck in via memory/skills/prior turn
       beforeToolCall:
         destruction: true
         scanParamSecrets: true
@@ -95,15 +104,15 @@ clearSecretCache();
 - ✅ Every channel that delivers through `inbound_claim` (Telegram, WhatsApp, Slack, Discord, Signal, iMessage, …) is covered uniformly. Telegram isn't special.
 - ✅ Every tool execution flows through `before_tool_call` → covered.
 - ✅ Every dispatched agent prompt gets secret redaction via `before_dispatch`.
+- ✅ Late-binding secrets (memory / skills / prior-turn context) are detected at `before_prompt_build`, with refusal guidance appended to the system prompt (we cannot silently redact at this layer — see "Limitation" above).
 - ⚠️ Voice transcripts: covered (transcript text → `inbound_claim`). Raw audio: not scanned (different problem).
 - ⚠️ Canvas / UI-direct events that bypass `inbound_claim`: not covered.
-- ⚠️ Secrets pulled in via memory/skills *after* `before_dispatch` are not scanned. Future work: register `before_prompt_build` hook for late-binding redaction.
 
 ## Tests
 
 ```bash
 npm install
-npm test       # 59 tests across patterns, cache, config, hooks
+npm test       # 64 tests across patterns, cache, config, hooks
 ```
 
 See [../README.md](../README.md#tests--ci) for layout and CI details.

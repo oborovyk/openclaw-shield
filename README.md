@@ -11,6 +11,7 @@ This repo *is* the `@openclaw-os/security` OpenClaw plugin. Install it with one 
 | `inbound_claim` | Secret scan on inbound channel text | Log (audit trail) |
 | `inbound_claim` | Prompt-injection scan on inbound text | Log + opt-in hard-block via `blockOnInjection: true` |
 | `before_dispatch` | Secret redaction | Rewrites the body the agent sees so credentials are masked (`first-4…last-4`) |
+| `before_prompt_build` | Late-binding secret scan on the assembled prompt | Detect-and-instruct — appends a system-prompt refusal if a credential slipped in via memory / skills / prior turn (the hook can't rewrite the prompt, only append context) |
 | `before_tool_call` | Destruction rules vs. shell-tool commands (`bash`, `exec`) | **Block** with `{ block: true, blockReason }` |
 | `before_tool_call` | Secret scan on every string param | **Block** (refuses to send credentials to a tool) |
 | `after_tool_call` | Secret scan on shell-tool output | Log (masked) so the model is warned not to echo |
@@ -35,8 +36,9 @@ Then add the config block to your openclaw runtime config, under `plugins.entrie
 plugins:
   entries:
     openclaw-os:
-      inboundClaim:    { scanSecrets: true, scanInjection: true, redactSecrets: true, blockOnInjection: false }
-      beforeToolCall:  { destruction: true, scanParamSecrets: true }
+      inboundClaim:       { scanSecrets: true, scanInjection: true, redactSecrets: true, blockOnInjection: false }
+      beforePromptBuild:  { scanAssembledPrompt: true }
+      beforeToolCall:     { destruction: true, scanParamSecrets: true }
       afterToolCall:   { scanReadResultsForInjection: true, scanShellOutputForSecrets: true }
 ```
 
@@ -89,7 +91,7 @@ Env knobs: `OPENCLAW_OS_SECRET_TTL=<seconds>`, `OPENCLAW_OS_NO_CACHE=1`. See [sr
 
 ```bash
 npm install           # vitest only; openclaw + plugin-sdk are optional peers
-npm test              # 59 tests across patterns, cache, config, hooks
+npm test              # 64 tests across patterns, cache, config, hooks
 ```
 
 CI runs on push and PR to `main` via [.github/workflows/ci.yml](.github/workflows/ci.yml).
@@ -108,14 +110,14 @@ openclaw-os/
 ├── package.json                    ← @openclaw-os/security
 ├── tsconfig.json                   ← self-contained
 ├── vitest.config.ts
-├── index.ts                        ← definePluginEntry + 4 registerHook calls
+├── index.ts                        ← definePluginEntry + 5 registerHook calls
 ├── install.sh                      ← contributor convenience for source builds
 ├── src/
 │   ├── config.ts
 │   ├── secret-cache.ts             ← AES-encrypted op:// resolver
 │   ├── patterns/                   ← regex packs
-│   ├── hooks/                      ← inbound-claim, before-dispatch, before-tool-call, after-tool-call
-│   └── **/*.test.ts                ← 9 test files, 59 tests
+│   ├── hooks/                      ← inbound-claim, before-dispatch, before-prompt-build, before-tool-call, after-tool-call
+│   └── **/*.test.ts                ← 10 test files, 64 tests
 ├── docs/
 │   └── OPENCLAW-PLUGIN.md          ← plugin reference + contributor install
 ├── CLAUDE.md                       ← agent-facing repo notes
