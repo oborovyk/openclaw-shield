@@ -39,6 +39,28 @@ curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
 
 Target a different OpenClaw checkout with `OPENCLAW_DIR=/path/to/openclaw`.
 
+**What the installer touches** (and only this):
+
+- Creates `<OPENCLAW_DIR>/extensions/openclaw-os/` (shallow git clone).
+- Conditionally appends one line to `<OPENCLAW_DIR>/pnpm-workspace.yaml` — only if the file already declares a `packages:` list. A backup is written to `pnpm-workspace.yaml.openclaw-os-bak`.
+- Nothing else. Your openclaw runtime config, secrets, other extensions are untouched.
+
+### Uninstall / disable
+
+```bash
+gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash -s -- --uninstall
+# or:  curl -fsSL .../install.sh | bash -s -- --uninstall
+```
+
+Behavior:
+
+- Refuses to delete `extensions/openclaw-os/` if it has staged, unstaged, or untracked files inside. Override with `OPENCLAW_OS_FORCE=1`.
+- The `extensions/*` line in `pnpm-workspace.yaml` is left in place (it's a generic openclaw pattern and harmless to keep, even if you have no other extensions).
+- The plugin's `plugins.entries.openclaw-os` block in your openclaw runtime config is **not** removed — do that manually so openclaw doesn't log a "no such plugin" warning at startup.
+- Run `pnpm install` after uninstall to clean up the workspace symlink.
+
+**To disable without uninstalling**, just remove the `plugins.entries.openclaw-os` block from your openclaw config; the plugin's hooks won't fire even though the extension dir is still present.
+
 ### Manual
 
 Clone the plugin into the OpenClaw extensions directory and let pnpm pick it up:

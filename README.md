@@ -35,7 +35,25 @@ curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
   https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
 ```
 
-Either form will clone the plugin into `extensions/openclaw-os/`, add `extensions/*` to `pnpm-workspace.yaml` if needed, and print next steps. Override the target with `OPENCLAW_DIR=/path/to/openclaw`.
+Either form will clone the plugin into `extensions/openclaw-os/`, conditionally append `extensions/*` to `pnpm-workspace.yaml` (only if a `packages:` list already exists; backup written to `pnpm-workspace.yaml.openclaw-os-bak`), and print next steps. Override the target with `OPENCLAW_DIR=/path/to/openclaw`.
+
+**What gets touched on install:**
+
+- Creates `<OPENCLAW_DIR>/extensions/openclaw-os/` (a shallow git clone).
+- Conditionally appends one line to `<OPENCLAW_DIR>/pnpm-workspace.yaml` (with backup).
+- Nothing else. Your openclaw config, secrets, other extensions are untouched.
+
+**Uninstall / disable**:
+
+```bash
+# remove the plugin checkout
+gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash -s -- --uninstall
+# or:  curl -fsSL .../install.sh | bash -s -- --uninstall
+```
+
+Uninstall refuses if there are uncommitted changes inside `extensions/openclaw-os/` (override with `OPENCLAW_OS_FORCE=1`). The `extensions/*` line in `pnpm-workspace.yaml` is left in place (generic openclaw pattern, harmless). Remove the `plugins.entries.openclaw-os` block from your openclaw config manually, then `pnpm install` to clean up the workspace link.
+
+To **disable without uninstalling**, just remove the `openclaw-os` block from your openclaw config — the plugin's hooks won't fire.
 
 ### Manual
 
