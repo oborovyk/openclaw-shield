@@ -1,7 +1,17 @@
 {
-  "extends": "../tsconfig.package-boundary.base.json",
   "compilerOptions": {
-    "rootDir": "."
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": ".",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": false
   },
   "include": ["./*.ts", "./src/**/*.ts"],
   "exclude": [

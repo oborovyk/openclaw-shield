@@ -37,22 +37,20 @@ export const DEFAULT_CONFIG: GuardrailsConfig = {
   verboseLogging: false,
 };
 
+type RawConfig = {
+  inboundClaim?: Partial<GuardrailsConfig["inboundClaim"]>;
+  beforeToolCall?: Partial<GuardrailsConfig["beforeToolCall"]>;
+  afterToolCall?: Partial<GuardrailsConfig["afterToolCall"]>;
+  verboseLogging?: boolean;
+};
+
 export function resolveConfig(raw: unknown): GuardrailsConfig {
   if (!raw || typeof raw !== "object") return DEFAULT_CONFIG;
-  const r = raw as Record<string, Record<string, unknown> | boolean | undefined>;
+  const r = raw as RawConfig;
   return {
-    inboundClaim: {
-      ...DEFAULT_CONFIG.inboundClaim,
-      ...((r.inboundClaim as object) ?? {}),
-    },
-    beforeToolCall: {
-      ...DEFAULT_CONFIG.beforeToolCall,
-      ...((r.beforeToolCall as object) ?? {}),
-    },
-    afterToolCall: {
-      ...DEFAULT_CONFIG.afterToolCall,
-      ...((r.afterToolCall as object) ?? {}),
-    },
+    inboundClaim: { ...DEFAULT_CONFIG.inboundClaim, ...r.inboundClaim },
+    beforeToolCall: { ...DEFAULT_CONFIG.beforeToolCall, ...r.beforeToolCall },
+    afterToolCall: { ...DEFAULT_CONFIG.afterToolCall, ...r.afterToolCall },
     verboseLogging:
       typeof r.verboseLogging === "boolean" ? r.verboseLogging : DEFAULT_CONFIG.verboseLogging,
   };

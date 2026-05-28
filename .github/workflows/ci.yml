@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: vitest
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install vitest
+        # package.json declares @openclaw/plugin-sdk and openclaw as
+        # `workspace:*` devDeps — these only resolve inside the openclaw
+        # monorepo. In standalone CI we install vitest directly and skip
+        # the workspace deps. The plugin code uses `import type` for openclaw
+        # symbols, so they're erased at compile time and the tests run fine
+        # without the openclaw workspace present.
+        run: npm install --no-save --no-package-lock vitest@^2.1.0
+
+      - name: Run tests
+        run: npx vitest run

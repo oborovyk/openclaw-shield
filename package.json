@@ -5,14 +5,19 @@
   "description": "OpenClaw plugin: runtime security guardrails (secret scan, prompt-injection scan, destruction guard, read-injection, bash-output scan).",
   "type": "module",
   "main": "./index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "devDependencies": {
-    "@openclaw/plugin-sdk": "workspace:*",
-    "openclaw": "workspace:*"
+    "vitest": "^2.1.0"
   },
   "peerDependencies": {
-    "openclaw": ">=2026.5.28"
+    "@openclaw/plugin-sdk": "*",
+    "openclaw": "*"
   },
   "peerDependenciesMeta": {
+    "@openclaw/plugin-sdk": { "optional": true },
     "openclaw": { "optional": true }
   },
   "openclaw": {
