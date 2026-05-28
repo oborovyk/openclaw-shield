@@ -14,7 +14,11 @@ import { scanInjection } from "../patterns/injection-patterns.js";
 import type { GuardrailsConfig } from "../config.js";
 
 const SHELL_HINTS = ["bash", "shell", "command", "exec", "run", "terminal"];
-const READ_HINTS = ["read", "fetch", "get", "fileread", "open", "cat", "view", "browse", "download"];
+// Tools likely to surface arbitrary remote/disk content the model may treat
+// as instructions. Excludes "get" and "open" (match memory_get / db_get /
+// db_open / similar structured-data tools where injection-pattern hits are
+// usually false positives). Add openclaw-specific tool names here as needed.
+const READ_HINTS = ["read", "fetch", "fileread", "cat", "view", "browse", "download", "webfetch", "urlfetch"];
 
 function nameMatches(name: string, hints: string[]): boolean {
   const n = name.toLowerCase();

@@ -23,11 +23,11 @@ export default definePluginEntry({
   register(api) {
     const config = resolveConfig((api as { pluginConfig?: unknown }).pluginConfig);
     const log = (line: string): void => {
-      if (config.verboseLogging || true) {
-        // Always log security findings — they're low-volume and high-value.
-        // eslint-disable-next-line no-console
-        console.warn(`[openclaw-os] ${line}`);
-      }
+      // Security findings are low-volume and high-value; we always log.
+      // verboseLogging is retained on the config schema for future use
+      // (per-handler diagnostic traces) but is intentionally not gated here.
+      // eslint-disable-next-line no-console
+      console.warn(`[openclaw-os] ${line}`);
     };
 
     api.registerHook("inbound_claim", makeInboundClaimHandler(config, log), {
