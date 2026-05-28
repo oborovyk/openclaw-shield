@@ -2,7 +2,7 @@
 
 Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw) — secret scan, prompt-injection scan, destruction guard, read-injection scan, bash-output secret scan, AES-encrypted secret cache — wired into OpenClaw's `inbound_claim`, `before_dispatch`, `before_tool_call`, and `after_tool_call` hooks.
 
-This repo *is* the `@openclaw-os/security` OpenClaw plugin. Drop it into the `extensions/` folder of an OpenClaw checkout and every channel (Telegram, WhatsApp, Slack, Discord, …) starts getting scanned automatically.
+This repo *is* the `@openclaw-os/security` OpenClaw plugin. Install it with one OpenClaw CLI command — works on Docker, nix, npm-global, source builds, anywhere `openclaw` runs.
 
 ## What it protects
 
@@ -20,67 +20,16 @@ Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. 
 
 ## Install
 
-### One-liner (recommended)
-
-From your OpenClaw repo root. The repo is private, so the easiest auth path is `gh` (most contributors already have it logged in):
+One command, any OpenClaw deployment (Docker / nix / npm-global / source):
 
 ```bash
-gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os
+openclaw plugins enable openclaw-os    # if not auto-enabled
 ```
 
-Or with `curl` + a GitHub PAT:
+OpenClaw resolves the plugin via your existing git credentials (gh auth, SSH key, or credential helper — same as `git clone`). The plugin lands in the right place for your deployment shape automatically.
 
-```bash
-curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
-  https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
-```
-
-Either form will clone the plugin into `extensions/openclaw-os/`, conditionally append `extensions/*` to `pnpm-workspace.yaml` (only if a `packages:` list already exists; backup written to `pnpm-workspace.yaml.openclaw-os-bak`), and print next steps. Override the target with `OPENCLAW_DIR=/path/to/openclaw`.
-
-**What gets touched on install:**
-
-- Creates `<OPENCLAW_DIR>/extensions/openclaw-os/` (a shallow git clone).
-- Conditionally appends one line to `<OPENCLAW_DIR>/pnpm-workspace.yaml` (with backup).
-- Nothing else. Your openclaw config, secrets, other extensions are untouched.
-
-**Uninstall / disable**:
-
-```bash
-# remove the plugin checkout
-gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash -s -- --uninstall
-# or:  curl -fsSL .../install.sh | bash -s -- --uninstall
-```
-
-Uninstall refuses if there are uncommitted changes inside `extensions/openclaw-os/` (override with `OPENCLAW_OS_FORCE=1`). The `extensions/*` line in `pnpm-workspace.yaml` is left in place (generic openclaw pattern, harmless). Remove the `plugins.entries.openclaw-os` block from your openclaw config manually, then `pnpm install` to clean up the workspace link.
-
-To **disable without uninstalling**, just remove the `openclaw-os` block from your openclaw config — the plugin's hooks won't fire.
-
-### Manual
-
-```bash
-cd /path/to/openclaw
-git clone https://github.com/Silverblock-Finance/openclaw-os.git extensions/openclaw-os
-grep -q "extensions/\*" pnpm-workspace.yaml || echo '  - "extensions/*"' >> pnpm-workspace.yaml
-pnpm install
-pnpm dev   # or however you start the gateway
-```
-
-Prefer to keep the plugin in a separate working tree? Clone elsewhere and symlink:
-
-```bash
-git clone https://github.com/Silverblock-Finance/openclaw-os.git ~/src/openclaw-os
-ln -s ~/src/openclaw-os /path/to/openclaw/extensions/openclaw-os
-```
-
-To track upstream:
-
-```bash
-cd /path/to/openclaw/extensions/openclaw-os  # or wherever you cloned
-git pull
-cd -; pnpm install   # picks up any new deps
-```
-
-Then in your openclaw config:
+Then add the config block to your openclaw runtime config, under `plugins.entries`:
 
 ```yaml
 plugins:
@@ -91,7 +40,36 @@ plugins:
       afterToolCall:   { scanReadResultsForInjection: true, scanShellOutputForSecrets: true }
 ```
 
-Look for `[openclaw-os] …` lines in stderr to see findings. Full plugin docs: [docs/OPENCLAW-PLUGIN.md](docs/OPENCLAW-PLUGIN.md).
+Restart openclaw. Look for `[openclaw-os] …` lines in stderr to see findings.
+
+### Pin to a tag or commit
+
+```bash
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os@v0.1.0
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os@<commit-sha>
+```
+
+### Update
+
+```bash
+openclaw plugins update openclaw-os
+```
+
+### Disable (keep installed, stop running)
+
+```bash
+openclaw plugins disable openclaw-os
+```
+
+### Uninstall
+
+```bash
+openclaw plugins uninstall openclaw-os
+```
+
+Add `--dry-run` to see what either disable or uninstall will do without applying. Add `--keep-files` to uninstall to leave the plugin checkout on disk.
+
+> Nix users: `OPENCLAW_NIX_MODE=1` makes `plugins install/update/uninstall/enable/disable` no-ops. Install via the [`nix-openclaw`](https://github.com/openclaw/nix-openclaw) source instead.
 
 ## Secret cache helper
 
@@ -110,11 +88,17 @@ Env knobs: `OPENCLAW_OS_SECRET_TTL=<seconds>`, `OPENCLAW_OS_NO_CACHE=1`. See [sr
 ## Tests + CI
 
 ```bash
-npm install           # installs vitest; openclaw + plugin-sdk are optional peers
+npm install           # vitest only; openclaw + plugin-sdk are optional peers
 npm test              # 59 tests across patterns, cache, config, hooks
 ```
 
 CI runs on push and PR to `main` via [.github/workflows/ci.yml](.github/workflows/ci.yml).
+
+## Contributing / source builds
+
+The repo ships an [install.sh](install.sh) for developers who run OpenClaw from a source checkout and want to drop this plugin into `extensions/`. End users on Docker / nix / npm-global don't need it — `openclaw plugins install` is the right path.
+
+See [docs/OPENCLAW-PLUGIN.md](docs/OPENCLAW-PLUGIN.md) and [CLAUDE.md](CLAUDE.md) for the source-build flow and contributor notes.
 
 ## Layout
 
@@ -122,24 +106,18 @@ CI runs on push and PR to `main` via [.github/workflows/ci.yml](.github/workflow
 openclaw-os/
 ├── openclaw.plugin.json            ← OpenClaw plugin manifest (id, kind, configSchema)
 ├── package.json                    ← @openclaw-os/security
-├── tsconfig.json                   ← self-contained; works standalone + inside openclaw
+├── tsconfig.json                   ← self-contained
 ├── vitest.config.ts
 ├── index.ts                        ← definePluginEntry + 4 registerHook calls
+├── install.sh                      ← contributor convenience for source builds
 ├── src/
-│   ├── config.ts                   ← schema → resolved config
+│   ├── config.ts
 │   ├── secret-cache.ts             ← AES-encrypted op:// resolver
 │   ├── patterns/                   ← regex packs
-│   │   ├── secret-patterns.ts
-│   │   ├── injection-patterns.ts
-│   │   └── destruction-rules.ts
-│   ├── hooks/
-│   │   ├── inbound-claim.ts        ← warn / opt-in block
-│   │   ├── before-dispatch.ts      ← rewrites body with redacted secrets
-│   │   ├── before-tool-call.ts     ← block destructive cmds / secrets-in-params
-│   │   └── after-tool-call.ts     ← warn on shell-output secrets, read-output injection
+│   ├── hooks/                      ← inbound-claim, before-dispatch, before-tool-call, after-tool-call
 │   └── **/*.test.ts                ← 9 test files, 59 tests
 ├── docs/
-│   └── OPENCLAW-PLUGIN.md          ← detailed plugin docs
+│   └── OPENCLAW-PLUGIN.md          ← plugin reference + contributor install
 ├── CLAUDE.md                       ← agent-facing repo notes
 └── .github/workflows/ci.yml
 ```

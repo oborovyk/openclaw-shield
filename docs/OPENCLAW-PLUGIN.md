@@ -20,84 +20,33 @@ Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw)
 
 Actual redaction lives in `before_dispatch`, whose result type `{ handled: false, text }` IS read back by the dispatcher (`src/auto-reply/reply/dispatch-from-config.ts:1886`).
 
-## Install
+## Install (end users)
 
-### One-liner
-
-From your OpenClaw repo root. The repo is private; `gh` is the simplest auth path:
+One command, any deployment shape (Docker / nix / npm-global / source):
 
 ```bash
-gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os
+openclaw plugins enable openclaw-os
 ```
 
-Or with `curl` + PAT:
+OpenClaw handles the rest — resolves your git credentials, lands the plugin where the runtime expects it, registers the id.
+
+Lifecycle:
 
 ```bash
-curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
-  https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os@v0.1.0   # pin to tag/commit
+openclaw plugins update    openclaw-os
+openclaw plugins disable   openclaw-os                # stop running, keep installed
+openclaw plugins uninstall openclaw-os                # remove
+openclaw plugins uninstall openclaw-os --dry-run      # preview
+openclaw plugins uninstall openclaw-os --keep-files   # remove from registry, leave files
 ```
 
-Target a different OpenClaw checkout with `OPENCLAW_DIR=/path/to/openclaw`.
-
-**What the installer touches** (and only this):
-
-- Creates `<OPENCLAW_DIR>/extensions/openclaw-os/` (shallow git clone).
-- Conditionally appends one line to `<OPENCLAW_DIR>/pnpm-workspace.yaml` — only if the file already declares a `packages:` list. A backup is written to `pnpm-workspace.yaml.openclaw-os-bak`.
-- Nothing else. Your openclaw runtime config, secrets, other extensions are untouched.
-
-### Uninstall / disable
-
-```bash
-gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash -s -- --uninstall
-# or:  curl -fsSL .../install.sh | bash -s -- --uninstall
-```
-
-Behavior:
-
-- Refuses to delete `extensions/openclaw-os/` if it has staged, unstaged, or untracked files inside. Override with `OPENCLAW_OS_FORCE=1`.
-- The `extensions/*` line in `pnpm-workspace.yaml` is left in place (it's a generic openclaw pattern and harmless to keep, even if you have no other extensions).
-- The plugin's `plugins.entries.openclaw-os` block in your openclaw runtime config is **not** removed — do that manually so openclaw doesn't log a "no such plugin" warning at startup.
-- Run `pnpm install` after uninstall to clean up the workspace symlink.
-
-**To disable without uninstalling**, just remove the `plugins.entries.openclaw-os` block from your openclaw config; the plugin's hooks won't fire even though the extension dir is still present.
-
-### Manual
-
-Clone the plugin into the OpenClaw extensions directory and let pnpm pick it up:
-
-```bash
-# 1. Clone into OpenClaw's extensions/ (single working tree)
-cd /path/to/openclaw
-git clone https://github.com/Silverblock-Finance/openclaw-os.git extensions/openclaw-os
-
-# 2. Tell pnpm-workspace about extensions/* if not already declared
-grep -q "extensions/\*" pnpm-workspace.yaml || echo '  - "extensions/*"' >> pnpm-workspace.yaml
-
-# 3. Install + restart
-pnpm install
-pnpm dev          # or however you start the gateway
-```
-
-If you'd rather keep the plugin in its own working tree (so you can `git pull` it independently of openclaw), clone elsewhere and symlink:
-
-```bash
-git clone https://github.com/Silverblock-Finance/openclaw-os.git ~/src/openclaw-os
-ln -s ~/src/openclaw-os /path/to/openclaw/extensions/openclaw-os
-```
-
-To track upstream:
-
-```bash
-cd /path/to/openclaw/extensions/openclaw-os    # or wherever you cloned it
-git pull
-cd -; pnpm install                              # picks up any new deps
-```
-
-Once OpenClaw boots, look for `[openclaw-os] …` lines in stderr — that's the plugin announcing findings.
+Nix users: `OPENCLAW_NIX_MODE=1` disables `plugins install/update/uninstall/enable/disable`. Use the [`nix-openclaw`](https://github.com/openclaw/nix-openclaw) source instead.
 
 ## Configuration
 
-In your OpenClaw config (e.g. `config/openclaw.yaml`), under `plugins.entries`:
+In your OpenClaw config (e.g. `openclaw.json` / `config/openclaw.yaml`), under `plugins.entries`:
 
 ```yaml
 plugins:
@@ -159,9 +108,23 @@ npm test       # 59 tests across patterns, cache, config, hooks
 
 See [../README.md](../README.md#tests--ci) for layout and CI details.
 
+## Source-build install (contributors only)
+
+If you run OpenClaw from a `git clone` of the openclaw repo and want this plugin in the same workspace (e.g. you're modifying both at once), the repo ships a developer-convenience script:
+
+```bash
+# from the openclaw repo root
+curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
+```
+
+This clones the plugin into `<openclaw>/extensions/openclaw-os/` and conditionally appends `extensions/*` to `pnpm-workspace.yaml`. `install.sh --uninstall` reverses it (refuses on dirty trees; override with `OPENCLAW_OS_FORCE=1`).
+
+**End users on Docker / nix / npm-global don't need this** — `openclaw plugins install` is the right path.
+
 ## Reference
 
 - Hook types: `openclaw/src/plugins/hook-types.ts`, `openclaw/src/plugins/hook-message.types.ts`
 - Plugin entry helper: `openclaw/packages/plugin-sdk/src/plugin-entry.ts`
 - Dispatcher (where `before_dispatch.text` is read back): `openclaw/src/auto-reply/reply/dispatch-from-config.ts:1886`
 - Canonical shell tools: `openclaw/src/agents/sessions/tools/bash.ts:287` (`bash`), `openclaw/src/agents/bash-tools.exec.ts:1276` (`exec`) — both use a `command` string param
+- Plugin lifecycle CLI: `openclaw/docs/cli/plugins.md`, `openclaw/docs/plugins/manage-plugins.md`

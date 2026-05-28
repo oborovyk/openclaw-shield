@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
-# install.sh — install / uninstall @openclaw-os/security in an OpenClaw checkout.
+# install.sh — CONTRIBUTOR INSTALL ONLY.
 #
-# Install (from inside the OpenClaw repo root):
+# This script is for developers running OpenClaw from a source-built `git clone`
+# of the openclaw repo who want this plugin in the same workspace. It drops the
+# plugin into `<openclaw>/extensions/openclaw-os/` and edits pnpm-workspace.yaml.
+#
+# END USERS — on Docker, nix, npm-global, or any other deployment — should NOT
+# run this. Use openclaw's native CLI instead:
+#
+#   openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os
+#   openclaw plugins enable openclaw-os
+#
+# That handles the right install path for whatever shape of openclaw you run.
+# See README.md → "Install" for full details.
+#
+# ─── Contributor usage ─────────────────────────────────────────────────────
+# Install (run from the OpenClaw repo root):
 #   curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
-#   gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash
 #
 # Uninstall:
 #   curl -fsSL .../install.sh | bash -s -- --uninstall
