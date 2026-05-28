@@ -1,0 +1,8 @@
+{
+  "name": "oc-base",
+  "version": "0.0.1",
+  "description": "Openclaw base plugin — security hooks and shared daily tooling. Mandatory.",
+  "author": {
+    "name": "Openclaw"
+  }
+}

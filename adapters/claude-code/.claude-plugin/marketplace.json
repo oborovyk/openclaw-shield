@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "openclaw",
+  "owner": {
+    "name": "Openclaw",
+    "url": "https://github.com/openclaw"
+  },
+  "plugins": [
+    {
+      "name": "oc-base",
+      "source": "./plugins/oc-base",
+      "description": "Mandatory base: security hooks (pre-commit scan, read-injection) + shared daily tooling. Install this first."
+    }
+  ]
+}
