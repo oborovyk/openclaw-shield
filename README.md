@@ -7,7 +7,11 @@ Inspired by [silverblock-claude-os](https://github.com/silverblock/silverblock-c
 - **Guardrails** — executable security checks (secret scan, prompt-injection scan, destructive-command scan, …) with a stable CLI + JSON contract. Wire them into Claude Code hooks, Codex CLI hooks, pre-commit, or CI — same binary, every time.
 - **Skills** — provider-neutral instruction bundles (`skill.yaml` + `prompt.md`). Adapters lower them to each provider's native format (Claude Code `SKILL.md`, Codex CLI `AGENTS.md` snippets, …).
 
-> **Status: usable for Claude Code.** All five guardrails are ported and the Claude Code adapter installs them into `~/.claude/settings.json` end-to-end. Codex CLI and other-provider adapters are still TODO. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
+> **Status: usable for Claude Code and OpenClaw.**
+> - **Claude Code**: all five guardrails ported, installed via `./openclaw.sh install` into `~/.claude/settings.json`.
+> - **OpenClaw**: TypeScript adapter at [`adapters/openclaw/`](adapters/openclaw/) — a real OpenClaw plugin (`@openclaw-os/security`) that registers into `inbound_claim`, `before_tool_call`, and `after_tool_call` hooks. Protects every channel (Telegram, WhatsApp, Slack, …) automatically. Install via workspace symlink — see [`adapters/openclaw/README.md`](adapters/openclaw/README.md).
+> - Codex CLI / Cursor / other adapters still TODO.
+> See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full design.
 
 ## Try it
 
