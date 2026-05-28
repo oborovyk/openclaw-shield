@@ -1,19 +1,28 @@
 // AES-encrypted on-disk secret cache.
 //
-// Ported from silverblock-claude-os/silverblock-claude-os.sh::cmd_secret.
 // Resolves `op://...` paths via the 1Password CLI (`op read`) with optional
 // env-var fallback, and caches the result on disk encrypted with AES-256-CBC
 // (PBKDF2 key derivation, per-user random salt) so the user isn't Touch-ID-
 // prompted on every fetch.
 //
-// Threat model is identical to silverblock-claude-os: the salt lives alongside
-// the cache so this is obfuscation against backup scanners, not real
-// encryption against anyone with read access to the user's home directory.
+// Threat model:
+//   - On macOS (default), the passphrase that derives the AES key lives in
+//     the user's Keychain (service: openclaw-shield) — NOT alongside the
+//     cache. An attacker with read access to the cache dir but no Keychain
+//     access cannot decrypt anything. See `src/keychain.ts` for details and
+//     for the wallet-grade strict-ACL escape hatch.
+//   - On non-darwin or with OPENCLAW_SHIELD_PASSPHRASE_BACKEND=file, the
+//     passphrase falls back to a .salt file inside the cache dir. That is
+//     obfuscation against backup scanners only, not encryption against an
+//     attacker with read access to the user's home directory.
 //
 // Defaults:
 //   - cache dir: $TMPDIR/.openclaw-shield-cache.<uid>/   (mode 0700)
 //   - TTL:       3h (10800s) — override with OPENCLAW_SHIELD_SECRET_TTL
 //   - bypass:    OPENCLAW_SHIELD_NO_CACHE=1
+//   - cache dir override: OPENCLAW_SHIELD_CACHE_DIR=<path>  (Docker / nix:
+//       point at a mounted volume so cache survives container restart and
+//       doesn't sit in the container's ephemeral /tmp layer)
 //
 // Usage:
 //   import { secret, clearSecretCache } from "./secret-cache.js";
@@ -41,6 +50,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { getKeychainPassphrase } from "./keychain.js";
 
 const execFileP = promisify(execFile);
 
@@ -82,6 +92,8 @@ function decrypt(blob: Buffer, passphrase: string): string {
 }
 
 function cacheDir(): string {
+  const override = process.env.OPENCLAW_SHIELD_CACHE_DIR;
+  if (override) return override;
   const uid = typeof process.getuid === "function" ? process.getuid() : "x";
   return join(tmpdir(), `.openclaw-shield-cache.${uid}`);
 }
@@ -106,6 +118,19 @@ function ensureDirAndSalt(dir: string): string | null {
       mkdirSync(dir, { recursive: true, mode: 0o700 });
       chmodSync(dir, 0o700);
     }
+  } catch {
+    return null;
+  }
+
+  // Prefer the macOS Keychain when available — passphrase lives outside the
+  // cache dir, so a reader of the dir can't decrypt anything. Falls back to
+  // the file-based .salt model on non-darwin or when the user has opted out
+  // via OPENCLAW_SHIELD_PASSPHRASE_BACKEND=file.
+  const keychainPass = getKeychainPassphrase();
+  if (keychainPass) return keychainPass;
+
+  // File-backed fallback.
+  try {
     const saltPath = join(dir, ".salt");
     if (!existsSync(saltPath)) {
       writeFileSync(saltPath, randomBytes(32).toString("hex"), { mode: 0o600 });

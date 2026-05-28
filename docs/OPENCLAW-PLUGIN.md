@@ -81,12 +81,18 @@ All flags default to safe-on / block-on values except `inboundClaim.blockOnInjec
 
 Helper for any plugin code that needs to resolve a 1Password secret without prompting Touch ID on every call.
 
-- Cache dir: `$TMPDIR/.openclaw-shield-cache.<uid>/` (mode 0700)
-- File format: openssl-compatible (`enc -aes-256-cbc -pbkdf2 -salt`) — files are inspectable from the shell with the per-user salt at `<cache>/.salt`
-- Threat model: obfuscation against backup scanners, NOT real encryption against an attacker with read access to the home dir (identical model to silverblock-claude-os)
+- Cache dir: `$TMPDIR/.openclaw-shield-cache.<uid>/` (mode 0700). Override via `OPENCLAW_SHIELD_CACHE_DIR=<path>` — useful in Docker, where `/tmp` is ephemeral and the cache is wiped on every container restart. Point at a mounted volume to persist across restarts.
+- File format: openssl-compatible (`enc -aes-256-cbc -pbkdf2 -salt`) — files are inspectable from the shell with the passphrase (Keychain item on macOS, `.salt` file otherwise).
+- Passphrase backend: macOS Keychain by default on darwin (service: `openclaw-shield`); on other platforms or with `OPENCLAW_SHIELD_PASSPHRASE_BACKEND=file`, falls back to a `.salt` file in the cache dir. Force the macOS path with `OPENCLAW_SHIELD_PASSPHRASE_BACKEND=keychain` (errors if `security` CLI is missing).
+- Threat model:
+  - **macOS (default)**: an attacker with read access to the cache dir cannot decrypt anything without also unlocking the Keychain. The Keychain item is gated by the system's standard "Always Allow" consent flow on first access. For wallet-grade strict posture, open Keychain Access → find the `openclaw-shield` item → Get Info → Access Control, and remove the prior Always-Allow entry; every openclaw restart then prompts.
+  - **Non-darwin or forced file backend**: obfuscation against backup scanners only, NOT real encryption against an attacker with read access to the home dir.
 - TTL: 3h default; override via `OPENCLAW_SHIELD_SECRET_TTL=<seconds>` or per-call `opts.ttl`
 - Bypass: `OPENCLAW_SHIELD_NO_CACHE=1` env or per-call `opts.noCache: true`
 - Resolution chain: `op read <opPath>` → `opts.envFallback` env var → `null`
+- Deployment notes:
+  - **macOS**: zero setup; the default `$TMPDIR` persists across reboots.
+  - **Docker**: if you use `op read` inside the container, mount a volume and set `OPENCLAW_SHIELD_CACHE_DIR=/cache`. If you inject secrets via plain env vars (the common Docker pattern), the cache hardly matters — `op` typically isn't installed in the container.
 
 ```ts
 import { secret, clearSecretCache } from "../secret-cache.js";

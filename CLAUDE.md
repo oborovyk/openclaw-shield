@@ -79,5 +79,5 @@ Patterns are case-insensitive (`/i`) and non-global. Don't add a global flag —
 ## Out of scope
 
 - **Static code-scan / OpenGrep rules** — openclaw already has `security/opengrep/` for that.
-- **Claude Code / Codex CLI / Cursor support** — those have separate harnesses (e.g. silverblock-claude-os). This repo is OpenClaw-only.
+- **Claude Code / Codex CLI / Cursor support** — those have separate harnesses. This repo is OpenClaw-only.
 - **Voice / canvas / non-`inbound_claim` channels** — call out as a coverage gap; don't try to scan raw audio bytes.

@@ -85,7 +85,23 @@ const token = await secret("op://<vault>/<item>/<field>", {
 });
 ```
 
-Env knobs: `OPENCLAW_SHIELD_SECRET_TTL=<seconds>`, `OPENCLAW_SHIELD_NO_CACHE=1`. See [src/secret-cache.ts](src/secret-cache.ts) for full options.
+**Env knobs**:
+
+- `OPENCLAW_SHIELD_SECRET_TTL=<seconds>` — override the 3h default.
+- `OPENCLAW_SHIELD_NO_CACHE=1` — bypass the cache entirely.
+- `OPENCLAW_SHIELD_CACHE_DIR=<path>` — override the cache directory (default `$TMPDIR/.openclaw-shield-cache.<uid>/`).
+
+**Deployment notes**:
+
+- **macOS**: works out of the box. `$TMPDIR` is per-user and persists across reboots; cache entries are TTL-pruned automatically.
+- **Docker**: `/tmp` inside the container is ephemeral — the cache is rebuilt after every container restart. If you actually use `op read` (i.e. `op` is installed in the container), mount a volume and point the cache there:
+  ```bash
+  docker run \
+    -v openclaw-shield-cache:/cache \
+    -e OPENCLAW_SHIELD_CACHE_DIR=/cache \
+    ...
+  ```
+  If you're injecting secrets via plain env vars (the common Docker pattern), the cache hardly matters — env-var reads are already cheap, and `op` typically isn't installed in the container anyway.
 
 ## Tests + CI
 

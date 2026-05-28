@@ -85,4 +85,25 @@ describe("secret cache", () => {
   it("returns null on empty opPath", async () => {
     expect(await secret("")).toBeNull();
   });
+
+  it("honors OPENCLAW_SHIELD_CACHE_DIR override", async () => {
+    const customDir = join(
+      process.env.TMPDIR ?? "/tmp",
+      `oc-shield-override-${Math.random().toString(36).slice(2)}`,
+    );
+    process.env.OPENCLAW_SHIELD_CACHE_DIR = customDir;
+    try {
+      process.env[ENV_NAME] = "tok-override";
+      await secret(TEST_PATH, { envFallback: ENV_NAME });
+      expect(getCacheDir()).toBe(customDir);
+      expect(existsSync(customDir)).toBe(true);
+      const files = readdirSync(customDir);
+      expect(files.length).toBeGreaterThan(0); // .salt + cached entry
+      // Cleanup
+      clearSecretCache();
+      expect(existsSync(customDir)).toBe(false);
+    } finally {
+      delete process.env.OPENCLAW_SHIELD_CACHE_DIR;
+    }
+  });
 });
