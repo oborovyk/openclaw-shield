@@ -27,7 +27,7 @@ function run(config = DEFAULT_CONFIG, event: Partial<Event> = {}) {
 describe("inbound_claim handler", () => {
   it("logs but does not block when secrets are present", () => {
     const { result, log } = run(DEFAULT_CONFIG, {
-      content: "my token is AKIAIOSFODNN7EXAMPLE",
+      content: `my token is AKIA${"X".repeat(16)}`,
     });
     expect(result).toBeUndefined();
     expect(log).toHaveBeenCalled();

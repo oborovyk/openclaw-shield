@@ -22,7 +22,7 @@ describe("before_prompt_build handler", () => {
   });
 
   it("detects secrets in messages, not just the prompt", () => {
-    const tok = "AKIAIOSFODNN7EXAMPLE";
+    const tok = `AKIA${"X".repeat(16)}`;
     const { result } = run(DEFAULT_CONFIG, {
       prompt: "",
       messages: [

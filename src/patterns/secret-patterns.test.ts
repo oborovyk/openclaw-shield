@@ -3,7 +3,7 @@ import { redactSecrets, scanSecrets } from "./secret-patterns.js";
 
 describe("scanSecrets", () => {
   it("detects AWS access keys", () => {
-    expect(scanSecrets("token = AKIAIOSFODNN7EXAMPLE").length).toBeGreaterThan(0);
+    expect(scanSecrets(`token = AKIA${"X".repeat(16)}`).length).toBeGreaterThan(0);
   });
 
   it("detects GitHub PATs", () => {
