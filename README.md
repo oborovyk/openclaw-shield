@@ -4,8 +4,6 @@ Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw)
 
 This repo *is* the `@openclaw-os/security` OpenClaw plugin. Drop it into the `extensions/` folder of an OpenClaw checkout and every channel (Telegram, WhatsApp, Slack, Discord, …) starts getting scanned automatically.
 
-> Also ships a Claude Code install path under [`extras/claude-code/`](extras/claude-code/) — the same five scanners, ported to Python, wired into `~/.claude/settings.json`. Independent of the OpenClaw plugin; for users who want the protections in their local Claude Code session.
-
 ## What it protects
 
 | OpenClaw hook | Guardrail | Behavior |
@@ -19,7 +17,7 @@ This repo *is* the `@openclaw-os/security` OpenClaw plugin. Drop it into the `ex
 
 Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. message that openclaw claims runs through `inbound_claim`.
 
-## Install (OpenClaw plugin)
+## Install
 
 From an OpenClaw checkout:
 
@@ -54,30 +52,8 @@ openclaw-os/
 ├── index.ts                    ← definePluginEntry + registerHook calls
 ├── src/
 │   ├── config.ts
-│   ├── patterns/               ← TS pattern packs (regex source of truth for the plugin)
+│   ├── patterns/               ← regex packs (secret, injection, destruction)
 │   └── hooks/                  ← inbound-claim, before-tool-call, after-tool-call
-├── extras/
-│   └── claude-code/            ← Optional: install the same guardrails into Claude Code
-│       ├── openclaw.sh         ← CLI: install / uninstall / scan / list
-│       ├── install.sh          ← writes to ~/.claude/settings.json
-│       └── guardrails/         ← 5 Python scanners (Claude-Code-shaped: stdin JSON + flags)
 └── docs/
-    ├── ARCHITECTURE.md
     └── OPENCLAW-PLUGIN.md
 ```
-
-## Claude Code install (optional)
-
-```bash
-cd ~/development/clients/openclaw-os
-./extras/claude-code/openclaw.sh install     # copies guardrails to ~/.openclaw/, merges hooks into ~/.claude/settings.json
-./extras/claude-code/openclaw.sh list
-./extras/claude-code/openclaw.sh scan secret --staged
-./extras/claude-code/openclaw.sh uninstall
-```
-
-Restart Claude Code after install. Idempotent; preserves any pre-existing entries in `~/.claude/settings.json`.
-
-## Known gap
-
-The TS pattern packs (`src/patterns/*.ts`) and the Python pattern packs (`extras/claude-code/guardrails/*.py`) are independent ports of the same patterns. Editing one does not update the other. Future work: move pattern lists to language-neutral JSON and have both sides load them.
