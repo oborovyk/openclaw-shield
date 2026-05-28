@@ -24,7 +24,7 @@ Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. 
 One command, any OpenClaw deployment (Docker / nix / npm-global / source):
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield
+openclaw plugins install git:github.com/oborovyk/openclaw-shield
 openclaw plugins enable openclaw-shield    # if not auto-enabled
 ```
 
@@ -47,8 +47,8 @@ Restart openclaw. Look for `[openclaw-shield] …` lines in stderr to see findin
 ### Pin to a tag or commit
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield@v0.1.0
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield@<commit-sha>
+openclaw plugins install git:github.com/oborovyk/openclaw-shield@v0.1.0
+openclaw plugins install git:github.com/oborovyk/openclaw-shield@<commit-sha>
 ```
 
 ### Update

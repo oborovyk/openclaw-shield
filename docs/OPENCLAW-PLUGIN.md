@@ -32,7 +32,7 @@ Actual redaction lives in `before_dispatch`, whose result type `{ handled: false
 One command, any deployment shape (Docker / nix / npm-global / source):
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield
+openclaw plugins install git:github.com/oborovyk/openclaw-shield
 openclaw plugins enable openclaw-shield
 ```
 
@@ -41,7 +41,7 @@ OpenClaw handles the rest — resolves your git credentials, lands the plugin wh
 Lifecycle:
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield@v0.1.0   # pin to tag/commit
+openclaw plugins install git:github.com/oborovyk/openclaw-shield@v0.1.0   # pin to tag/commit
 openclaw plugins update    openclaw-shield
 openclaw plugins disable   openclaw-shield                # stop running, keep installed
 openclaw plugins uninstall openclaw-shield                # remove
@@ -123,7 +123,7 @@ If you run OpenClaw from a `git clone` of the openclaw repo and want this plugin
 
 ```bash
 # from the openclaw repo root
-curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-shield/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/oborovyk/openclaw-shield/main/install.sh | bash
 ```
 
 This clones the plugin into `<openclaw>/extensions/openclaw-shield/` and conditionally appends `extensions/*` to `pnpm-workspace.yaml`. `install.sh --uninstall` reverses it (refuses on dirty trees; override with `OPENCLAW_SHIELD_FORCE=1`).

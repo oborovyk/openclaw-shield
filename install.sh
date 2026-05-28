@@ -8,7 +8,7 @@
 # END USERS — on Docker, nix, npm-global, or any other deployment — should NOT
 # run this. Use openclaw's native CLI instead:
 #
-#   openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield
+#   openclaw plugins install git:github.com/oborovyk/openclaw-shield
 #   openclaw plugins enable openclaw-shield
 #
 # That handles the right install path for whatever shape of openclaw you run.
@@ -16,7 +16,7 @@
 #
 # ─── Contributor usage ─────────────────────────────────────────────────────
 # Install (run from the OpenClaw repo root):
-#   curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-shield/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/oborovyk/openclaw-shield/main/install.sh | bash
 #
 # Uninstall:
 #   curl -fsSL .../install.sh | bash -s -- --uninstall
@@ -36,7 +36,7 @@
 
 set -eo pipefail
 
-REPO_SLUG="Silverblock-Finance/openclaw-shield"
+REPO_SLUG="oborovyk/openclaw-shield"
 REPO_HTTPS="${OPENCLAW_SHIELD_REPO_URL:-https://github.com/${REPO_SLUG}.git}"
 REPO_SSH="git@github.com:${REPO_SLUG}.git"
 OPENCLAW_DIR="${OPENCLAW_DIR:-$PWD}"
@@ -186,7 +186,7 @@ Then in your openclaw config, under plugins.entries:
     afterToolCall:   { scanReadResultsForInjection: true, scanShellOutputForSecrets: true }
 
 To uninstall later:
-  curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-shield/main/install.sh | bash -s -- --uninstall
+  curl -fsSL https://raw.githubusercontent.com/oborovyk/openclaw-shield/main/install.sh | bash -s -- --uninstall
 
-Docs: https://github.com/Silverblock-Finance/openclaw-shield
+Docs: https://github.com/oborovyk/openclaw-shield
 EOF
