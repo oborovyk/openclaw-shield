@@ -91,8 +91,8 @@ Helper for any plugin code that needs to resolve a 1Password secret without prom
 ```ts
 import { secret, clearSecretCache } from "../secret-cache.js";
 
-const token = await secret("op://Employee/openclaw-shield/github_token", {
-  envFallback: "GITHUB_TOKEN",
+const token = await secret("op://<vault>/<item>/<field>", {
+  envFallback: "MY_TOKEN_ENV_VAR",
 });
 
 // Wipe cache (next call re-fetches from op + writes new file under a new salt)

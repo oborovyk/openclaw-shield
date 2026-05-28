@@ -80,8 +80,8 @@ Add `--dry-run` to see what either disable or uninstall will do without applying
 ```ts
 import { secret } from "@openclaw-shield/security/src/secret-cache.js";
 
-const token = await secret("op://Employee/openclaw-shield/github_token", {
-  envFallback: "GITHUB_TOKEN",
+const token = await secret("op://<vault>/<item>/<field>", {
+  envFallback: "MY_TOKEN_ENV_VAR",
 });
 ```
 
@@ -123,3 +123,10 @@ openclaw-shield/
 ├── CLAUDE.md                       ← agent-facing repo notes
 └── .github/workflows/ci.yml
 ```
+
+## License & contributing
+
+MIT — see [LICENSE](LICENSE).
+
+- Contributing: [CONTRIBUTING.md](CONTRIBUTING.md) — scope, code conventions, how to propose pattern changes.
+- Reporting a vulnerability: [SECURITY.md](SECURITY.md) — please disclose privately first.

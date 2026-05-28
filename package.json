@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "description": "OpenClaw plugin: runtime security guardrails (secret scan, prompt-injection scan, destruction guard, read-injection, bash-output scan).",
+  "license": "MIT",
+  "author": "Oleg Borovyk",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/oborovyk/openclaw-shield.git"
+  },
+  "bugs": {
+    "url": "https://github.com/oborovyk/openclaw-shield/issues"
+  },
+  "homepage": "https://github.com/oborovyk/openclaw-shield",
   "type": "module",
   "main": "./index.ts",
   "scripts": {

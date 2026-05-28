@@ -17,7 +17,7 @@
 //
 // Usage:
 //   import { secret, clearSecretCache } from "./secret-cache.js";
-//   const token = await secret("op://Employee/openclaw-shield/github_token", "GITHUB_TOKEN");
+//   const token = await secret("op://<vault>/<item>/<field>", { envFallback: "FOO_TOKEN" });
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
