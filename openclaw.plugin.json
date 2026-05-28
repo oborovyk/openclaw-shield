@@ -1,6 +1,6 @@
 {
-  "id": "openclaw-os",
-  "name": "openclaw-os Security",
+  "id": "openclaw-shield",
+  "name": "openclaw-shield Security",
   "description": "Runtime security guardrails for OpenClaw: secret-scan, prompt-injection-scan, destruction-scan, read-injection-scan, bash-output-scan — wired into inbound_claim, before_dispatch, before_prompt_build, before_tool_call, and after_tool_call hooks.",
   "kind": "security",
   "activation": {

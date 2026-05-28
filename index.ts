@@ -1,4 +1,4 @@
-// openclaw-os Security — plugin entry point.
+// openclaw-shield Security — plugin entry point.
 //
 // Registers five runtime hooks on OpenClaw:
 //   - inbound_claim       → secret + prompt-injection scan on inbound channel messages (warn / opt-in block)
@@ -7,7 +7,7 @@
 //   - before_tool_call    → destruction guard + secret scan on tool params (block)
 //   - after_tool_call     → secret + injection scan on tool output (warn-only)
 //
-// Configured via plugins.entries["openclaw-os"] in openclaw config; see
+// Configured via plugins.entries["openclaw-shield"] in openclaw config; see
 // `openclaw.plugin.json` for the schema and `src/config.ts` for the defaults.
 
 import { definePluginEntry } from "openclaw/plugin-sdk/plugin-entry";
@@ -19,8 +19,8 @@ import { makeBeforeToolCallHandler } from "./src/hooks/before-tool-call.js";
 import { makeInboundClaimHandler } from "./src/hooks/inbound-claim.js";
 
 export default definePluginEntry({
-  id: "openclaw-os",
-  name: "openclaw-os Security",
+  id: "openclaw-shield",
+  name: "openclaw-shield Security",
   description:
     "Runtime security guardrails for OpenClaw: secret scan, prompt-injection scan, destruction guard, read-injection, bash-output scan.",
   kind: "security",
@@ -31,23 +31,23 @@ export default definePluginEntry({
       // verboseLogging is retained on the config schema for future use
       // (per-handler diagnostic traces) but is intentionally not gated here.
       // eslint-disable-next-line no-console
-      console.warn(`[openclaw-os] ${line}`);
+      console.warn(`[openclaw-shield] ${line}`);
     };
 
     api.registerHook("inbound_claim", makeInboundClaimHandler(config, log), {
-      name: "openclaw-os/inbound-claim",
+      name: "openclaw-shield/inbound-claim",
     });
     api.registerHook("before_dispatch", makeBeforeDispatchHandler(config, log), {
-      name: "openclaw-os/before-dispatch",
+      name: "openclaw-shield/before-dispatch",
     });
     api.registerHook("before_prompt_build", makeBeforePromptBuildHandler(config, log), {
-      name: "openclaw-os/before-prompt-build",
+      name: "openclaw-shield/before-prompt-build",
     });
     api.registerHook("before_tool_call", makeBeforeToolCallHandler(config, log), {
-      name: "openclaw-os/before-tool-call",
+      name: "openclaw-shield/before-tool-call",
     });
     api.registerHook("after_tool_call", makeAfterToolCallHandler(config, log), {
-      name: "openclaw-os/after-tool-call",
+      name: "openclaw-shield/after-tool-call",
     });
   },
 });

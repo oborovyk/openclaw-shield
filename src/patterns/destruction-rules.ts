@@ -1,4 +1,4 @@
-// Ported from openclaw-os/core/guardrails/destruction-scan.py (PATTERNS).
+// Ported from openclaw-shield/core/guardrails/destruction-scan.py (PATTERNS).
 // The Python source uses re.VERBOSE; we inline the same patterns here without
 // whitespace/comments so they match the same shell strings.
 

@@ -11,13 +11,13 @@
 // encryption against anyone with read access to the user's home directory.
 //
 // Defaults:
-//   - cache dir: $TMPDIR/.openclaw-os-cache.<uid>/   (mode 0700)
-//   - TTL:       3h (10800s) — override with OPENCLAW_OS_SECRET_TTL
-//   - bypass:    OPENCLAW_OS_NO_CACHE=1
+//   - cache dir: $TMPDIR/.openclaw-shield-cache.<uid>/   (mode 0700)
+//   - TTL:       3h (10800s) — override with OPENCLAW_SHIELD_SECRET_TTL
+//   - bypass:    OPENCLAW_SHIELD_NO_CACHE=1
 //
 // Usage:
 //   import { secret, clearSecretCache } from "./secret-cache.js";
-//   const token = await secret("op://Employee/openclaw-os/github_token", "GITHUB_TOKEN");
+//   const token = await secret("op://Employee/openclaw-shield/github_token", "GITHUB_TOKEN");
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -83,17 +83,17 @@ function decrypt(blob: Buffer, passphrase: string): string {
 
 function cacheDir(): string {
   const uid = typeof process.getuid === "function" ? process.getuid() : "x";
-  return join(tmpdir(), `.openclaw-os-cache.${uid}`);
+  return join(tmpdir(), `.openclaw-shield-cache.${uid}`);
 }
 
 function ttlSeconds(): number {
-  const raw = process.env.OPENCLAW_OS_SECRET_TTL;
+  const raw = process.env.OPENCLAW_SHIELD_SECRET_TTL;
   const n = raw ? Number.parseInt(raw, 10) : Number.NaN;
   return Number.isFinite(n) && n > 0 ? n : 10_800; // 3h
 }
 
 function cacheDisabled(): boolean {
-  return process.env.OPENCLAW_OS_NO_CACHE === "1";
+  return process.env.OPENCLAW_SHIELD_NO_CACHE === "1";
 }
 
 function cacheKey(opPath: string): string {

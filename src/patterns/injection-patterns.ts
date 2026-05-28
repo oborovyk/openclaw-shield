@@ -1,4 +1,4 @@
-// Ported from openclaw-os/core/guardrails/prompt-injection-scan.py (PATTERNS).
+// Ported from openclaw-shield/core/guardrails/prompt-injection-scan.py (PATTERNS).
 
 export const INJECTION_PATTERNS: RegExp[] = [
   // Instruction override

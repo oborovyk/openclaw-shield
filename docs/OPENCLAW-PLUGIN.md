@@ -1,4 +1,4 @@
-# `@openclaw-os/security` — OpenClaw plugin
+# `@openclaw-shield/security` — OpenClaw plugin
 
 Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw). Single TypeScript plugin, registers four hooks, pure in-process (no subprocess, no Python).
 
@@ -8,7 +8,7 @@ Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw)
 | --- | --- | --- |
 | `inbound_claim` | Secret scan on inbound message text (every channel) | Log finding |
 | `inbound_claim` | Prompt-injection scan on inbound text | Log + opt-in hard-block (`blockOnInjection: true`) |
-| `before_dispatch` | Secret redaction in dispatched body | Rewrites `text` so the agent sees `[openclaw-os redacted: AWS Access Key → AKIA…YQRE]` instead of the token |
+| `before_dispatch` | Secret redaction in dispatched body | Rewrites `text` so the agent sees `[openclaw-shield redacted: AWS Access Key → AKIA…YQRE]` instead of the token |
 | `before_prompt_build` | Late-binding secret scan on the assembled prompt (catches secrets pulled in via memory/skills/prior turn) | Append-only: logs the finding + appends a refusal-and-rotate instruction to the system prompt. Cannot rewrite the prompt — see "Limitation" below. |
 | `before_tool_call` | Destruction-rule scan against canonical shell tools (`bash`, `exec`) | **Block** with `{ block: true, blockReason }` |
 | `before_tool_call` | Secret scan on every string param value | **Block** (refuses to send credentials to a tool) |
@@ -32,8 +32,8 @@ Actual redaction lives in `before_dispatch`, whose result type `{ handled: false
 One command, any deployment shape (Docker / nix / npm-global / source):
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os
-openclaw plugins enable openclaw-os
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield
+openclaw plugins enable openclaw-shield
 ```
 
 OpenClaw handles the rest — resolves your git credentials, lands the plugin where the runtime expects it, registers the id.
@@ -41,12 +41,12 @@ OpenClaw handles the rest — resolves your git credentials, lands the plugin wh
 Lifecycle:
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os@v0.1.0   # pin to tag/commit
-openclaw plugins update    openclaw-os
-openclaw plugins disable   openclaw-os                # stop running, keep installed
-openclaw plugins uninstall openclaw-os                # remove
-openclaw plugins uninstall openclaw-os --dry-run      # preview
-openclaw plugins uninstall openclaw-os --keep-files   # remove from registry, leave files
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield@v0.1.0   # pin to tag/commit
+openclaw plugins update    openclaw-shield
+openclaw plugins disable   openclaw-shield                # stop running, keep installed
+openclaw plugins uninstall openclaw-shield                # remove
+openclaw plugins uninstall openclaw-shield --dry-run      # preview
+openclaw plugins uninstall openclaw-shield --keep-files   # remove from registry, leave files
 ```
 
 Nix users: `OPENCLAW_NIX_MODE=1` disables `plugins install/update/uninstall/enable/disable`. Use the [`nix-openclaw`](https://github.com/openclaw/nix-openclaw) source instead.
@@ -58,7 +58,7 @@ In your OpenClaw config (e.g. `openclaw.json` / `config/openclaw.yaml`), under `
 ```yaml
 plugins:
   entries:
-    openclaw-os:
+    openclaw-shield:
       inboundClaim:
         scanSecrets: true
         scanInjection: true
@@ -81,17 +81,17 @@ All flags default to safe-on / block-on values except `inboundClaim.blockOnInjec
 
 Helper for any plugin code that needs to resolve a 1Password secret without prompting Touch ID on every call.
 
-- Cache dir: `$TMPDIR/.openclaw-os-cache.<uid>/` (mode 0700)
+- Cache dir: `$TMPDIR/.openclaw-shield-cache.<uid>/` (mode 0700)
 - File format: openssl-compatible (`enc -aes-256-cbc -pbkdf2 -salt`) — files are inspectable from the shell with the per-user salt at `<cache>/.salt`
 - Threat model: obfuscation against backup scanners, NOT real encryption against an attacker with read access to the home dir (identical model to silverblock-claude-os)
-- TTL: 3h default; override via `OPENCLAW_OS_SECRET_TTL=<seconds>` or per-call `opts.ttl`
-- Bypass: `OPENCLAW_OS_NO_CACHE=1` env or per-call `opts.noCache: true`
+- TTL: 3h default; override via `OPENCLAW_SHIELD_SECRET_TTL=<seconds>` or per-call `opts.ttl`
+- Bypass: `OPENCLAW_SHIELD_NO_CACHE=1` env or per-call `opts.noCache: true`
 - Resolution chain: `op read <opPath>` → `opts.envFallback` env var → `null`
 
 ```ts
 import { secret, clearSecretCache } from "../secret-cache.js";
 
-const token = await secret("op://Employee/openclaw-os/github_token", {
+const token = await secret("op://Employee/openclaw-shield/github_token", {
   envFallback: "GITHUB_TOKEN",
 });
 
@@ -123,10 +123,10 @@ If you run OpenClaw from a `git clone` of the openclaw repo and want this plugin
 
 ```bash
 # from the openclaw repo root
-curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-shield/main/install.sh | bash
 ```
 
-This clones the plugin into `<openclaw>/extensions/openclaw-os/` and conditionally appends `extensions/*` to `pnpm-workspace.yaml`. `install.sh --uninstall` reverses it (refuses on dirty trees; override with `OPENCLAW_OS_FORCE=1`).
+This clones the plugin into `<openclaw>/extensions/openclaw-shield/` and conditionally appends `extensions/*` to `pnpm-workspace.yaml`. `install.sh --uninstall` reverses it (refuses on dirty trees; override with `OPENCLAW_SHIELD_FORCE=1`).
 
 **End users on Docker / nix / npm-global don't need this** — `openclaw plugins install` is the right path.
 

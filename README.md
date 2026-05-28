@@ -1,8 +1,8 @@
-# openclaw-os
+# openclaw-shield
 
 Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw) — secret scan, prompt-injection scan, destruction guard, read-injection scan, bash-output secret scan, AES-encrypted secret cache — wired into OpenClaw's `inbound_claim`, `before_dispatch`, `before_tool_call`, and `after_tool_call` hooks.
 
-This repo *is* the `@openclaw-os/security` OpenClaw plugin. Install it with one OpenClaw CLI command — works on Docker, nix, npm-global, source builds, anywhere `openclaw` runs.
+This repo *is* the `@openclaw-shield/security` OpenClaw plugin. Install it with one OpenClaw CLI command — works on Docker, nix, npm-global, source builds, anywhere `openclaw` runs.
 
 ## What it protects
 
@@ -24,8 +24,8 @@ Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. 
 One command, any OpenClaw deployment (Docker / nix / npm-global / source):
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os
-openclaw plugins enable openclaw-os    # if not auto-enabled
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield
+openclaw plugins enable openclaw-shield    # if not auto-enabled
 ```
 
 OpenClaw resolves the plugin via your existing git credentials (gh auth, SSH key, or credential helper — same as `git clone`). The plugin lands in the right place for your deployment shape automatically.
@@ -35,38 +35,38 @@ Then add the config block to your openclaw runtime config, under `plugins.entrie
 ```yaml
 plugins:
   entries:
-    openclaw-os:
+    openclaw-shield:
       inboundClaim:       { scanSecrets: true, scanInjection: true, redactSecrets: true, blockOnInjection: false }
       beforePromptBuild:  { scanAssembledPrompt: true }
       beforeToolCall:     { destruction: true, scanParamSecrets: true }
       afterToolCall:   { scanReadResultsForInjection: true, scanShellOutputForSecrets: true }
 ```
 
-Restart openclaw. Look for `[openclaw-os] …` lines in stderr to see findings.
+Restart openclaw. Look for `[openclaw-shield] …` lines in stderr to see findings.
 
 ### Pin to a tag or commit
 
 ```bash
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os@v0.1.0
-openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os@<commit-sha>
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield@v0.1.0
+openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield@<commit-sha>
 ```
 
 ### Update
 
 ```bash
-openclaw plugins update openclaw-os
+openclaw plugins update openclaw-shield
 ```
 
 ### Disable (keep installed, stop running)
 
 ```bash
-openclaw plugins disable openclaw-os
+openclaw plugins disable openclaw-shield
 ```
 
 ### Uninstall
 
 ```bash
-openclaw plugins uninstall openclaw-os
+openclaw plugins uninstall openclaw-shield
 ```
 
 Add `--dry-run` to see what either disable or uninstall will do without applying. Add `--keep-files` to uninstall to leave the plugin checkout on disk.
@@ -75,17 +75,17 @@ Add `--dry-run` to see what either disable or uninstall will do without applying
 
 ## Secret cache helper
 
-`src/secret-cache.ts` exports `secret(opPath, { envFallback })` for any plugin code that needs to resolve a 1Password secret without Touch-ID-prompting the user on every call. AES-256-CBC encrypted at-rest under `$TMPDIR/.openclaw-os-cache.<uid>/`, 3h default TTL, openssl-compatible file format.
+`src/secret-cache.ts` exports `secret(opPath, { envFallback })` for any plugin code that needs to resolve a 1Password secret without Touch-ID-prompting the user on every call. AES-256-CBC encrypted at-rest under `$TMPDIR/.openclaw-shield-cache.<uid>/`, 3h default TTL, openssl-compatible file format.
 
 ```ts
-import { secret } from "@openclaw-os/security/src/secret-cache.js";
+import { secret } from "@openclaw-shield/security/src/secret-cache.js";
 
-const token = await secret("op://Employee/openclaw-os/github_token", {
+const token = await secret("op://Employee/openclaw-shield/github_token", {
   envFallback: "GITHUB_TOKEN",
 });
 ```
 
-Env knobs: `OPENCLAW_OS_SECRET_TTL=<seconds>`, `OPENCLAW_OS_NO_CACHE=1`. See [src/secret-cache.ts](src/secret-cache.ts) for full options.
+Env knobs: `OPENCLAW_SHIELD_SECRET_TTL=<seconds>`, `OPENCLAW_SHIELD_NO_CACHE=1`. See [src/secret-cache.ts](src/secret-cache.ts) for full options.
 
 ## Tests + CI
 
@@ -105,9 +105,9 @@ See [docs/OPENCLAW-PLUGIN.md](docs/OPENCLAW-PLUGIN.md) and [CLAUDE.md](CLAUDE.md
 ## Layout
 
 ```
-openclaw-os/
+openclaw-shield/
 ├── openclaw.plugin.json            ← OpenClaw plugin manifest (id, kind, configSchema)
-├── package.json                    ← @openclaw-os/security
+├── package.json                    ← @openclaw-shield/security
 ├── tsconfig.json                   ← self-contained
 ├── vitest.config.ts
 ├── index.ts                        ← definePluginEntry + 5 registerHook calls

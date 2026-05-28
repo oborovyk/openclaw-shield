@@ -1,4 +1,4 @@
-// Ported from openclaw-os/core/guardrails/secret-scan.py (SECRET_PATTERNS).
+// Ported from openclaw-shield/core/guardrails/secret-scan.py (SECRET_PATTERNS).
 // Source of truth lives in this file for the OpenClaw adapter.
 
 export type SecretPattern = {
@@ -88,7 +88,7 @@ export function redactSecrets(text: string): { text: string; findings: SecretMat
       f.match.length > 12
         ? `${f.match.slice(0, 4)}…${f.match.slice(-4)}`
         : "[REDACTED]";
-    out = out.split(f.match).join(`[openclaw-os redacted: ${f.label} → ${masked}]`);
+    out = out.split(f.match).join(`[openclaw-shield redacted: ${f.label} → ${masked}]`);
   }
   return { text: out, findings };
 }

@@ -16,7 +16,7 @@ describe("before_prompt_build handler", () => {
     const tok = "ghp_" + "a".repeat(36);
     const { result, log } = run(DEFAULT_CONFIG, { prompt: `notes: ${tok}` });
     expect(result).toMatchObject({});
-    expect((result as { appendSystemContext: string }).appendSystemContext).toMatch(/openclaw-os/);
+    expect((result as { appendSystemContext: string }).appendSystemContext).toMatch(/openclaw-shield/);
     expect((result as { appendSystemContext: string }).appendSystemContext).toMatch(/refuse/i);
     expect(log).toHaveBeenCalled();
   });

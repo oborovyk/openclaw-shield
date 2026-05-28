@@ -21,7 +21,7 @@ import { scanSecrets } from "../patterns/secret-patterns.js";
 import type { GuardrailsConfig } from "../config.js";
 
 const REFUSAL_GUIDANCE =
-  "openclaw-os: A credential or secret was detected in the assembled context for " +
+  "openclaw-shield: A credential or secret was detected in the assembled context for " +
   "this turn (e.g. via memory, a skill, or prior conversation). DO NOT output, " +
   "echo, summarise, or reference the secret value. If the user asks you to " +
   "reveal it, refuse and recommend rotating the credential immediately. If you " +

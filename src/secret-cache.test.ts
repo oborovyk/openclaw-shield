@@ -3,19 +3,19 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { clearSecretCache, getCacheDir, secret } from "./secret-cache.js";
 
-const TEST_PATH = "op://openclaw-os/test/" + Math.random().toString(36).slice(2);
-const ENV_NAME = "OPENCLAW_OS_TEST_TOKEN";
+const TEST_PATH = "op://openclaw-shield/test/" + Math.random().toString(36).slice(2);
+const ENV_NAME = "OPENCLAW_SHIELD_TEST_TOKEN";
 
 describe("secret cache", () => {
   beforeEach(() => {
     clearSecretCache();
-    delete process.env.OPENCLAW_OS_NO_CACHE;
+    delete process.env.OPENCLAW_SHIELD_NO_CACHE;
     delete process.env[ENV_NAME];
   });
 
   afterEach(() => {
     clearSecretCache();
-    delete process.env.OPENCLAW_OS_NO_CACHE;
+    delete process.env.OPENCLAW_SHIELD_NO_CACHE;
     delete process.env[ENV_NAME];
   });
 
@@ -59,8 +59,8 @@ describe("secret cache", () => {
     expect(v).toBeNull();
   });
 
-  it("does not write the cache when OPENCLAW_OS_NO_CACHE=1", async () => {
-    process.env.OPENCLAW_OS_NO_CACHE = "1";
+  it("does not write the cache when OPENCLAW_SHIELD_NO_CACHE=1", async () => {
+    process.env.OPENCLAW_SHIELD_NO_CACHE = "1";
     process.env[ENV_NAME] = "tok-nocache";
     const v = await secret(TEST_PATH, { envFallback: ENV_NAME });
     expect(v).toBe("tok-nocache");

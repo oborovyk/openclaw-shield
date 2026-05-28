@@ -69,7 +69,7 @@ export function makeBeforeToolCallHandler(
           log(`before_tool_call: BLOCK ${event.toolName} — ${hit.label}: ${hit.match}`);
           return {
             block: true,
-            blockReason: `openclaw-os destruction-scan: ${hit.label}. ${hit.reason}`,
+            blockReason: `openclaw-shield destruction-scan: ${hit.label}. ${hit.reason}`,
           };
         }
       }
@@ -82,7 +82,7 @@ export function makeBeforeToolCallHandler(
           log(`before_tool_call: BLOCK ${event.toolName} — secret in params: ${findings[0].label}`);
           return {
             block: true,
-            blockReason: `openclaw-os secret-scan: ${findings[0].label} in tool parameter. Tool call refused.`,
+            blockReason: `openclaw-shield secret-scan: ${findings[0].label} in tool parameter. Tool call refused.`,
           };
         }
       }

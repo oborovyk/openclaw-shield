@@ -3,31 +3,31 @@
 #
 # This script is for developers running OpenClaw from a source-built `git clone`
 # of the openclaw repo who want this plugin in the same workspace. It drops the
-# plugin into `<openclaw>/extensions/openclaw-os/` and edits pnpm-workspace.yaml.
+# plugin into `<openclaw>/extensions/openclaw-shield/` and edits pnpm-workspace.yaml.
 #
 # END USERS — on Docker, nix, npm-global, or any other deployment — should NOT
 # run this. Use openclaw's native CLI instead:
 #
-#   openclaw plugins install git:github.com/Silverblock-Finance/openclaw-os
-#   openclaw plugins enable openclaw-os
+#   openclaw plugins install git:github.com/Silverblock-Finance/openclaw-shield
+#   openclaw plugins enable openclaw-shield
 #
 # That handles the right install path for whatever shape of openclaw you run.
 # See README.md → "Install" for full details.
 #
 # ─── Contributor usage ─────────────────────────────────────────────────────
 # Install (run from the OpenClaw repo root):
-#   curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-shield/main/install.sh | bash
 #
 # Uninstall:
 #   curl -fsSL .../install.sh | bash -s -- --uninstall
 #
 # Knobs:
 #   OPENCLAW_DIR=/path/to/openclaw       target a non-cwd OpenClaw checkout
-#   OPENCLAW_OS_REPO_URL=<git url>       override clone URL (default github HTTPS)
-#   OPENCLAW_OS_FORCE=1                  skip the safety prompts during uninstall
+#   OPENCLAW_SHIELD_REPO_URL=<git url>       override clone URL (default github HTTPS)
+#   OPENCLAW_SHIELD_FORCE=1                  skip the safety prompts during uninstall
 #
 # What this script touches (and only this):
-#   <OPENCLAW_DIR>/extensions/openclaw-os/         created (install) / removed (uninstall)
+#   <OPENCLAW_DIR>/extensions/openclaw-shield/         created (install) / removed (uninstall)
 #   <OPENCLAW_DIR>/pnpm-workspace.yaml             one-line append (install only) — see notes
 #
 # Uninstall does NOT revert the pnpm-workspace.yaml edit (`extensions/*` glob is
@@ -36,13 +36,13 @@
 
 set -eo pipefail
 
-REPO_SLUG="Silverblock-Finance/openclaw-os"
-REPO_HTTPS="${OPENCLAW_OS_REPO_URL:-https://github.com/${REPO_SLUG}.git}"
+REPO_SLUG="Silverblock-Finance/openclaw-shield"
+REPO_HTTPS="${OPENCLAW_SHIELD_REPO_URL:-https://github.com/${REPO_SLUG}.git}"
 REPO_SSH="git@github.com:${REPO_SLUG}.git"
 OPENCLAW_DIR="${OPENCLAW_DIR:-$PWD}"
-TARGET="${OPENCLAW_DIR%/}/extensions/openclaw-os"
+TARGET="${OPENCLAW_DIR%/}/extensions/openclaw-shield"
 WORKSPACE_FILE="${OPENCLAW_DIR%/}/pnpm-workspace.yaml"
-FORCE="${OPENCLAW_OS_FORCE:-0}"
+FORCE="${OPENCLAW_SHIELD_FORCE:-0}"
 
 MODE="install"
 for arg in "$@"; do
@@ -52,9 +52,9 @@ for arg in "$@"; do
   esac
 done
 
-say()  { printf '\033[1;36m[openclaw-os]\033[0m %s\n' "$1"; }
-warn() { printf '\033[1;33m[openclaw-os]\033[0m %s\n' "$1" >&2; }
-die()  { printf '\033[1;31m[openclaw-os]\033[0m %s\n' "$1" >&2; exit 1; }
+say()  { printf '\033[1;36m[openclaw-shield]\033[0m %s\n' "$1"; }
+warn() { printf '\033[1;33m[openclaw-shield]\033[0m %s\n' "$1" >&2; }
+die()  { printf '\033[1;31m[openclaw-shield]\033[0m %s\n' "$1" >&2; exit 1; }
 
 if [ "$MODE" = "help" ]; then
   sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'
@@ -77,9 +77,9 @@ if [ "$MODE" = "uninstall" ]; then
        [ -n "$(git -C "${TARGET}" ls-files --others --exclude-standard 2>/dev/null)" ]; then
       warn "${TARGET} has uncommitted changes (staged, unstaged, or untracked files)."
       if [ "$FORCE" != "1" ]; then
-        die "refusing to delete. Commit/stash your work, or re-run with OPENCLAW_OS_FORCE=1."
+        die "refusing to delete. Commit/stash your work, or re-run with OPENCLAW_SHIELD_FORCE=1."
       fi
-      warn "OPENCLAW_OS_FORCE=1 — deleting anyway."
+      warn "OPENCLAW_SHIELD_FORCE=1 — deleting anyway."
     fi
   fi
 
@@ -88,13 +88,13 @@ if [ "$MODE" = "uninstall" ]; then
 
   cat <<EOF
 
-\033[1;32m✓\033[0m openclaw-os uninstalled.
+\033[1;32m✓\033[0m openclaw-shield uninstalled.
 
 The 'extensions/*' line in pnpm-workspace.yaml (if added by install) was left
 in place — it's a generic openclaw pattern and harmless to keep.
 
 If you had this plugin enabled in your openclaw runtime config, remove the
-\`plugins.entries.openclaw-os\` block manually so openclaw doesn't warn at
+\`plugins.entries.openclaw-shield\` block manually so openclaw doesn't warn at
 startup.
 
 Then run \`pnpm install\` in ${OPENCLAW_DIR} to clean up the workspace link.
@@ -140,7 +140,7 @@ clone_repo() {
 
 # Clone or fast-forward.
 if [ -d "${TARGET}/.git" ]; then
-  say "extensions/openclaw-os already a git checkout — pulling (--ff-only)"
+  say "extensions/openclaw-shield already a git checkout — pulling (--ff-only)"
   git -C "${TARGET}" pull --ff-only || die "pull failed — resolve local changes in ${TARGET} or re-run with --uninstall"
 elif [ -e "${TARGET}" ]; then
   die "${TARGET} exists but isn't a git checkout — move or delete it first"
@@ -159,9 +159,9 @@ if [ -f "${WORKSPACE_FILE}" ]; then
   elif grep -qE '^packages:' "${WORKSPACE_FILE}"; then
     # Safe append — file already has the packages: section we'll fall under.
     say "appending 'extensions/*' to ${WORKSPACE_FILE}"
-    cp "${WORKSPACE_FILE}" "${WORKSPACE_FILE}.openclaw-os-bak"
+    cp "${WORKSPACE_FILE}" "${WORKSPACE_FILE}.openclaw-shield-bak"
     printf '  - "extensions/*"\n' >> "${WORKSPACE_FILE}"
-    say "  (backup saved to ${WORKSPACE_FILE}.openclaw-os-bak)"
+    say "  (backup saved to ${WORKSPACE_FILE}.openclaw-shield-bak)"
   else
     warn "${WORKSPACE_FILE} does not declare a 'packages:' list — leaving it untouched. Add 'extensions/*' manually if pnpm doesn't pick the plugin up."
   fi
@@ -171,7 +171,7 @@ fi
 
 cat <<EOF
 
-\033[1;32m✓\033[0m openclaw-os installed at ${TARGET}
+\033[1;32m✓\033[0m openclaw-shield installed at ${TARGET}
 
 Next steps:
   cd ${OPENCLAW_DIR}
@@ -180,13 +180,13 @@ Next steps:
 
 Then in your openclaw config, under plugins.entries:
 
-  openclaw-os:
+  openclaw-shield:
     inboundClaim:    { scanSecrets: true, scanInjection: true, redactSecrets: true, blockOnInjection: false }
     beforeToolCall:  { destruction: true, scanParamSecrets: true }
     afterToolCall:   { scanReadResultsForInjection: true, scanShellOutputForSecrets: true }
 
 To uninstall later:
-  curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash -s -- --uninstall
+  curl -fsSL https://raw.githubusercontent.com/Silverblock-Finance/openclaw-shield/main/install.sh | bash -s -- --uninstall
 
-Docs: https://github.com/Silverblock-Finance/openclaw-os
+Docs: https://github.com/Silverblock-Finance/openclaw-shield
 EOF

@@ -21,7 +21,7 @@ import { scanSecrets } from "../patterns/secret-patterns.js";
 import type { GuardrailsConfig } from "../config.js";
 
 const BLOCK_REPLY_TEXT =
-  "openclaw-os: This message looks like a prompt-injection attempt and was blocked. " +
+  "openclaw-shield: This message looks like a prompt-injection attempt and was blocked. " +
   "If you believe this is wrong, contact the operator.";
 
 export function makeInboundClaimHandler(

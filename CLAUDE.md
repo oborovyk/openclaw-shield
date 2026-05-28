@@ -4,9 +4,9 @@ Agent-facing notes for working in this repo. For end-user / install docs, see [R
 
 ## What this repo is
 
-`@openclaw-os/security` — a single OpenClaw plugin that registers five runtime hooks (`inbound_claim`, `before_dispatch`, `before_prompt_build`, `before_tool_call`, `after_tool_call`) and applies regex-based security guardrails against the events that flow through them.
+`@openclaw-shield/security` — a single OpenClaw plugin that registers five runtime hooks (`inbound_claim`, `before_dispatch`, `before_prompt_build`, `before_tool_call`, `after_tool_call`) and applies regex-based security guardrails against the events that flow through them.
 
-Designed to be symlinked into `openclaw/extensions/openclaw-os/` and auto-loaded by openclaw's pnpm-workspace + plugin loader. Works standalone for development and tests; the openclaw monorepo provides the `openclaw` and `@openclaw/plugin-sdk` peer dependencies at runtime via workspace resolution.
+Designed to be symlinked into `openclaw/extensions/openclaw-shield/` and auto-loaded by openclaw's pnpm-workspace + plugin loader. Works standalone for development and tests; the openclaw monorepo provides the `openclaw` and `@openclaw/plugin-sdk` peer dependencies at runtime via workspace resolution.
 
 ## Conventions
 
@@ -15,7 +15,7 @@ Designed to be symlinked into `openclaw/extensions/openclaw-os/` and auto-loaded
 - **Hooks must be pure observation OR return a typed result.** Mutating event objects in place is fragile and silently no-ops in several cases (see "Trap" below). If the contract permits a rewrite, return it; if it doesn't, treat the event as read-only.
 - **Pattern arrays carry `label` + `regex` (+ `reason` for destruction).** Adding a new pattern means appending to the array; no central registry.
 - **One pattern pack per concern**, one hook handler per openclaw hook. Don't multiplex.
-- **Always log security findings.** They're low-volume and high-value; `console.warn("[openclaw-os] …")` until the host exposes a structured logger we can adopt.
+- **Always log security findings.** They're low-volume and high-value; `console.warn("[openclaw-shield] …")` until the host exposes a structured logger we can adopt.
 
 ## Trap that bit us once
 
@@ -63,7 +63,7 @@ Patterns are case-insensitive (`/i`) and non-global. Don't add a global flag —
 ## Adding a hook
 
 1. Write `src/hooks/<name>.ts` exporting a `make<Name>Handler(config, log)` factory.
-2. Register it in `index.ts` via `api.registerHook("<event_name>", make<Name>Handler(config, log), { name: "openclaw-os/<name>" })`.
+2. Register it in `index.ts` via `api.registerHook("<event_name>", make<Name>Handler(config, log), { name: "openclaw-shield/<name>" })`.
 3. Update `openclaw.plugin.json` `configSchema` if the hook has new toggles.
 4. Update `src/config.ts` `GuardrailsConfig` + `DEFAULT_CONFIG`.
 5. Add a test in `src/hooks/<name>.test.ts` using the existing mocked-event pattern (declare a local `Event` type, no openclaw-type imports).
