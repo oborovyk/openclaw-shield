@@ -20,7 +20,24 @@ Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. 
 
 ## Install
 
-From an OpenClaw checkout, clone the plugin directly into `extensions/`:
+### One-liner (recommended)
+
+From your OpenClaw repo root. The repo is private, so the easiest auth path is `gh` (most contributors already have it logged in):
+
+```bash
+gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash
+```
+
+Or with `curl` + a GitHub PAT:
+
+```bash
+curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+  https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
+```
+
+Either form will clone the plugin into `extensions/openclaw-os/`, add `extensions/*` to `pnpm-workspace.yaml` if needed, and print next steps. Override the target with `OPENCLAW_DIR=/path/to/openclaw`.
+
+### Manual
 
 ```bash
 cd /path/to/openclaw

@@ -22,6 +22,25 @@ Actual redaction lives in `before_dispatch`, whose result type `{ handled: false
 
 ## Install
 
+### One-liner
+
+From your OpenClaw repo root. The repo is private; `gh` is the simplest auth path:
+
+```bash
+gh api repos/Silverblock-Finance/openclaw-os/contents/install.sh -H 'Accept: application/vnd.github.raw' | bash
+```
+
+Or with `curl` + PAT:
+
+```bash
+curl -fsSL -H "Authorization: Bearer $GH_TOKEN" \
+  https://raw.githubusercontent.com/Silverblock-Finance/openclaw-os/main/install.sh | bash
+```
+
+Target a different OpenClaw checkout with `OPENCLAW_DIR=/path/to/openclaw`.
+
+### Manual
+
 Clone the plugin into the OpenClaw extensions directory and let pnpm pick it up:
 
 ```bash
