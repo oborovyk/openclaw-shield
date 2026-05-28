@@ -20,14 +20,29 @@ Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. 
 
 ## Install
 
-From an OpenClaw checkout:
+From an OpenClaw checkout, clone the plugin directly into `extensions/`:
 
 ```bash
 cd /path/to/openclaw
-ln -s /Users/oborovyk/development/clients/openclaw-os extensions/openclaw-os
+git clone https://github.com/Silverblock-Finance/openclaw-os.git extensions/openclaw-os
 grep -q "extensions/\*" pnpm-workspace.yaml || echo '  - "extensions/*"' >> pnpm-workspace.yaml
 pnpm install
 pnpm dev   # or however you start the gateway
+```
+
+Prefer to keep the plugin in a separate working tree? Clone elsewhere and symlink:
+
+```bash
+git clone https://github.com/Silverblock-Finance/openclaw-os.git ~/src/openclaw-os
+ln -s ~/src/openclaw-os /path/to/openclaw/extensions/openclaw-os
+```
+
+To track upstream:
+
+```bash
+cd /path/to/openclaw/extensions/openclaw-os  # or wherever you cloned
+git pull
+cd -; pnpm install   # picks up any new deps
 ```
 
 Then in your openclaw config:

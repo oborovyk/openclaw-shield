@@ -20,14 +20,14 @@ Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw)
 
 Actual redaction lives in `before_dispatch`, whose result type `{ handled: false, text }` IS read back by the dispatcher (`src/auto-reply/reply/dispatch-from-config.ts:1886`).
 
-## Install (workspace-local)
+## Install
 
-From the OpenClaw checkout:
+Clone the plugin into the OpenClaw extensions directory and let pnpm pick it up:
 
 ```bash
-# 1. Symlink this repo into OpenClaw's extensions/
+# 1. Clone into OpenClaw's extensions/ (single working tree)
 cd /path/to/openclaw
-ln -s /Users/oborovyk/development/clients/openclaw-os extensions/openclaw-os
+git clone https://github.com/Silverblock-Finance/openclaw-os.git extensions/openclaw-os
 
 # 2. Tell pnpm-workspace about extensions/* if not already declared
 grep -q "extensions/\*" pnpm-workspace.yaml || echo '  - "extensions/*"' >> pnpm-workspace.yaml
@@ -35,6 +35,21 @@ grep -q "extensions/\*" pnpm-workspace.yaml || echo '  - "extensions/*"' >> pnpm
 # 3. Install + restart
 pnpm install
 pnpm dev          # or however you start the gateway
+```
+
+If you'd rather keep the plugin in its own working tree (so you can `git pull` it independently of openclaw), clone elsewhere and symlink:
+
+```bash
+git clone https://github.com/Silverblock-Finance/openclaw-os.git ~/src/openclaw-os
+ln -s ~/src/openclaw-os /path/to/openclaw/extensions/openclaw-os
+```
+
+To track upstream:
+
+```bash
+cd /path/to/openclaw/extensions/openclaw-os    # or wherever you cloned it
+git pull
+cd -; pnpm install                              # picks up any new deps
 ```
 
 Once OpenClaw boots, look for `[openclaw-os] …` lines in stderr — that's the plugin announcing findings.

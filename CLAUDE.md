@@ -70,7 +70,7 @@ Patterns are case-insensitive (`/i`) and non-global. Don't add a global flag —
 
 ## Reference
 
-- OpenClaw checkout (for spelunking): `/Users/oborovyk/development/ai/openclaw/`
+- OpenClaw source (for spelunking): https://github.com/openclaw/openclaw — `git clone https://github.com/openclaw/openclaw.git ~/src/openclaw` is a convenient local checkout
 - Hook type definitions: `openclaw/src/plugins/hook-types.ts`
 - Plugin entry helper: `openclaw/packages/plugin-sdk/src/plugin-entry.ts`
 - Memory-core extension (good real-world example of `definePluginEntry`): `openclaw/extensions/memory-core/`
