@@ -8,6 +8,13 @@ const ENV_NAME = "OPENCLAW_SHIELD_TEST_TOKEN";
 
 describe("secret cache", () => {
   beforeEach(() => {
+    // Pin the passphrase backend to file. The Keychain path is exercised by
+    // keychain.test.ts; here we test cache mechanics deterministically.
+    process.env.OPENCLAW_SHIELD_PASSPHRASE_BACKEND = "file";
+    // Skip the real `op read` call — on a dev Mac with the 1Password CLI
+    // logged in, op is slow / prompts Touch ID. CI doesn't have op installed
+    // so this is a no-op there.
+    process.env.OPENCLAW_SHIELD_SKIP_OP = "1";
     clearSecretCache();
     delete process.env.OPENCLAW_SHIELD_NO_CACHE;
     delete process.env[ENV_NAME];
@@ -16,6 +23,8 @@ describe("secret cache", () => {
   afterEach(() => {
     clearSecretCache();
     delete process.env.OPENCLAW_SHIELD_NO_CACHE;
+    delete process.env.OPENCLAW_SHIELD_PASSPHRASE_BACKEND;
+    delete process.env.OPENCLAW_SHIELD_SKIP_OP;
     delete process.env[ENV_NAME];
   });
 
