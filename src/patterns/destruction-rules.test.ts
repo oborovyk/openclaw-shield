@@ -7,7 +7,7 @@ describe("scanDestruction", () => {
     expect(scanDestruction("rm -rf /etc")).not.toBeNull();
     expect(scanDestruction("rm -rf $HOME")).not.toBeNull();
     expect(scanDestruction("rm -rf ~/")).not.toBeNull();
-    expect(scanDestruction("rm -rf /Users/oleg")).not.toBeNull();
+    expect(scanDestruction("rm -rf /Users/alice")).not.toBeNull();
   });
 
   it("does not flag rm against project paths", () => {

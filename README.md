@@ -27,6 +27,19 @@ This repo *is* the `@openclaw-shield/security` OpenClaw plugin. Install it with 
 
 Coverage is channel-agnostic — every Telegram, WhatsApp, Slack, Discord, etc. message that openclaw claims runs through `inbound_claim`.
 
+## Prerequisites
+
+Required:
+
+- **[OpenClaw](https://github.com/openclaw/openclaw)** — the host this plugin runs in.
+- **Node.js 22+** — OpenClaw runs on Node and so does this plugin.
+- **`pnpm`** (if you build from source / use the workspace install path). Not needed if you use `openclaw plugins install` on a non-source OpenClaw deployment.
+- **`git`** — `openclaw plugins install git:...` clones over git.
+
+Optional:
+
+- **A secret-manager CLI** (`op`, `bws`, `doppler`, `infisical`, `vault`, `pass`, `aws`) — only if you want the secret cache to resolve refs of that manager's shape. The bundled `secret-handoff` skill includes per-OS install commands for each.
+
 ## Install
 
 One command, any OpenClaw deployment (Docker / nix / npm-global / source):
