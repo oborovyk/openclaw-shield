@@ -96,22 +96,35 @@ Add `--dry-run` to see what either disable or uninstall will do without applying
 
 > Nix users: `OPENCLAW_NIX_MODE=1` makes `plugins install/update/uninstall/enable/disable` no-ops. Install via the [`nix-openclaw`](https://github.com/openclaw/nix-openclaw) source instead.
 
-## Bundled skill: `secret-handoff`
+## Password manager integration
 
-[`skills/secret-handoff/SKILL.md`](skills/secret-handoff/SKILL.md) is a manager-agnostic skill that auto-activates when the conversation touches credentials. It codifies the canonical secret-manager workflow for both directions:
+When the agent tries to write a credential to a file or send one in a tool param, the `before_tool_call` hook blocks. The bundled **`secret-handoff` skill** at [skills/secret-handoff/SKILL.md](skills/secret-handoff/SKILL.md) auto-activates and teaches the model the canonical secret-manager workflow:
 
-- **Storing** a credential: store in the manager (per the table below), write a reference (or pull-at-run-time config) to the env file, run the app via the manager's `run`-style wrapper.
-- **Using** a credential: prefer the wrapper (`op run`, `bws run`, `doppler run`, `infisical run`) over inline resolution; never paste the literal value into chat.
+1. **Store** the value in the user's manager via its CLI (one call).
+2. **Write a reference** (or pull-at-run-time setup) instead of the literal value.
+3. **Run the app** via the manager's `run`-style wrapper so the secret lives only inside the process env.
 
-The skill covers **the same 8 managers** the secret cache below resolves: 1Password, Bitwarden Secrets Manager, Doppler, Infisical, HashiCorp Vault, pass, macOS Keychain, AWS Secrets Manager. It includes an install-command table (per OS, with docs URLs) and a quick-reference store + read table so the model uses the exact canonical command rather than improvising.
+### What a typical interaction looks like
 
-## Secret cache helper
+```
+User:     Save my Stripe key sk_live_abc123... for my OpenClaw-driven curl tests.
+OpenClaw: [agent tries to call a tool with the value → BLOCKED by before_tool_call]
+          Which vault should I store it in — 1Password, Bitwarden, Doppler,
+          Infisical, Vault, pass, Keychain, or AWS Secrets Manager?
+User:     1Password, Private vault.
+OpenClaw: [runs:] op item create --category="API Credential" \
+                   --vault=Private --title=stripe credential="sk_live_..."
+          Stored at op://Private/stripe/credential. To use it in your tests,
+          run them under: op run --env-file=.env -- <command>
+```
 
-`src/secret-cache.ts` exports `secret(ref, { envFallback })` for any plugin code that needs to resolve a secret-manager reference without re-prompting (Touch ID / keychain unlock / re-auth) on every call. AES-256-CBC encrypted at-rest under `$TMPDIR/.openclaw-shield-cache.<uid>/`, 3h default TTL, openssl-compatible file format.
+The skill includes per-OS install commands for each CLI, a quick-reference store+read table, and explicit anti-patterns (no pasting values back to chat, no inlining via `echo`, no mixing managers across one project).
 
-**Supported reference shapes** (dispatch by URL prefix; see [src/resolvers.ts](src/resolvers.ts) to add a new manager):
+### Supported managers (skill + secret cache)
 
-| Prefix | Manager | Underlying CLI |
+Same set in both layers:
+
+| Prefix used by `src/secret-cache.ts` | Manager | Underlying CLI |
 | --- | --- | --- |
 | `op://<vault>/<item>/<field>` | 1Password | `op read` |
 | `bws://<secret-id>` | Bitwarden Secrets Manager | `bws secret get` |
@@ -122,32 +135,37 @@ The skill covers **the same 8 managers** the secret cache below resolves: 1Passw
 | `keychain://<account>@<service>` | macOS Keychain | `security find-generic-password` |
 | `aws-sm://<name>` | AWS Secrets Manager | `aws secretsmanager get-secret-value` |
 
+### AES-encrypted secret cache
+
+For plugin code that needs to resolve a secret programmatically (e.g., another OpenClaw plugin calling an upstream API), `src/secret-cache.ts` exports `secret(ref, { envFallback })` which resolves any of the 8 reference shapes above and caches the plaintext on disk encrypted — so the user isn't re-prompted (Touch ID / keychain unlock / re-auth) on every call. AES-256-CBC, openssl-compatible file format under `$TMPDIR/.openclaw-shield-cache.<uid>/`, 3h default TTL.
+
 ```ts
 import { secret } from "@openclaw-shield/security/src/secret-cache.js";
 
-// Works for any of the 8 managers — dispatch is by URL prefix.
 const token = await secret("op://<vault>/<item>/credential", { envFallback: "MY_TOKEN_ENV_VAR" });
 const doppler = await secret("doppler://my-project/dev/STRIPE_KEY");
 const vault   = await secret("vault://secret/path/api_key");
 ```
 
-**Env knobs**:
+Adding a new manager is one function in [src/resolvers.ts](src/resolvers.ts) + one entry in the `RESOLVERS` list.
+
+#### Env knobs
 
 - `OPENCLAW_SHIELD_SECRET_TTL=<seconds>` — override the 3h default.
 - `OPENCLAW_SHIELD_NO_CACHE=1` — bypass the cache entirely.
 - `OPENCLAW_SHIELD_CACHE_DIR=<path>` — override the cache directory (default `$TMPDIR/.openclaw-shield-cache.<uid>/`).
 
-**Deployment notes**:
+#### Deployment notes
 
 - **macOS**: works out of the box. `$TMPDIR` is per-user and persists across reboots; cache entries are TTL-pruned automatically.
-- **Docker**: `/tmp` inside the container is ephemeral — the cache is rebuilt after every container restart. If you actually use `op read` (i.e. `op` is installed in the container), mount a volume and point the cache there:
+- **Docker**: `/tmp` inside the container is ephemeral — the cache is rebuilt after every container restart. If `op` is installed in the container, mount a volume and point the cache there:
   ```bash
   docker run \
     -v openclaw-shield-cache:/cache \
     -e OPENCLAW_SHIELD_CACHE_DIR=/cache \
     ...
   ```
-  If you're injecting secrets via plain env vars (the common Docker pattern), the cache hardly matters — env-var reads are already cheap, and `op` typically isn't installed in the container anyway.
+  If you're injecting secrets via plain env vars (the common Docker pattern), the cache hardly matters.
 
 ## Tests + CI
 
