@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![OpenClaw plugin](https://img.shields.io/badge/OpenClaw-plugin-blueviolet)](https://github.com/openclaw/openclaw)
 [![Node.js](https://img.shields.io/badge/Node.js-22%2B-brightgreen)](https://nodejs.org/)
-[![Tests](https://img.shields.io/badge/tests-101-brightgreen)](src)
+[![Tests](https://img.shields.io/badge/tests-115-brightgreen)](src)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)](CONTRIBUTING.md)
 [![Security policy](https://img.shields.io/badge/security-policy-informational)](SECURITY.md)
 
