@@ -12,6 +12,8 @@ Runtime security guardrails for [OpenClaw](https://github.com/openclaw/openclaw)
 
 This repo *is* the `@openclaw-shield/security` OpenClaw plugin. Install it with one OpenClaw CLI command — works on Docker, nix, npm-global, source builds, anywhere `openclaw` runs.
 
+Sibling project to [claude-shield](https://github.com/oborovyk/claude-shield) (Claude Code) and [hermes-shield](https://github.com/oborovyk/hermes-shield) (Hermes Agent). Same threat model and patterns; this repo is the OpenClaw variant.
+
 ## What it protects
 
 | OpenClaw hook | Guardrail | Behavior |
@@ -189,18 +191,7 @@ openclaw-shield/
 
 ## Disclaimer
 
-openclaw-shield is **defense in depth, not a guarantee**. The pattern packs catch known-shape credentials and known-shape injection signatures; they have false negatives by design. Use openclaw-shield alongside other practices (rotating credentials when they touch a machine, server-side scanning in CI, never storing secrets in source). Don't treat it as a substitute for security review.
-
-**What openclaw-shield will not prevent:**
-
-- Custom-encoded credentials (base64'd tokens, novel key formats, deliberate misspellings of common shapes).
-- Silent redaction at `inbound_claim` — OpenClaw's `inbound_claim` event is a copy of `hookContext`, so we can't rewrite the user message there; redaction happens in `before_dispatch` via the `text` rewrite affordance. Any pathway that bypasses `before_dispatch` is uncovered.
-- Exfiltration via the assistant's plain conversational responses — openclaw-shield only inspects inbound messages, tool calls, and tool outputs, not free-text replies.
-- Bypasses through the documented opt-out env vars / config flags (`blockOnInjection: false` is the default, individual scans can be disabled per the config table).
-- Voice or canvas activity that doesn't traverse `inbound_claim` / `before_dispatch` / `before_prompt_build` / `before_tool_call` / `after_tool_call`.
-- Anything that requires the user's local environment to be uncompromised.
-
-**Trademark notice.** openclaw-shield is an independent open-source plugin. OpenClaw is a project of openclaw.ai; the author is not affiliated with openclaw.ai. Use of "OpenClaw" in this README is nominative — to identify the host platform this plugin extends.
+openclaw-shield is **defense in depth, not a guarantee** — the pattern packs have false negatives by design, and only events that traverse the five registered hooks get scanned. Use it alongside other practices (credential rotation, CI-side scanning, never storing secrets in source); don't treat it as a substitute for security review. See [SECURITY.md](SECURITY.md) for the full out-of-scope list.
 
 ## License & contributing
 
